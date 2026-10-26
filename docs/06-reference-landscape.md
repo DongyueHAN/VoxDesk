@@ -3,9 +3,9 @@
 | 字段 | 值 |
 | --- | --- |
 | 文档 | `docs/06-reference-landscape.md` |
-| 版本 | v0.1.0 |
+| 版本 | v0.2.0 |
 | 状态 | 草案（部分条目待核实） |
-| 更新 | 2026-10-20 12:12 +08:00 |
+| 更新 | 2026-10-26 14:30 +08:00 |
 | 生效范围 | 功能与技术的参照系，不含实现结论 |
 
 > 标注 `[待核]` 的条目为公开资料推断，未经一手文档验证。本文件的作用是**提供参照**，不是复刻依据。
@@ -23,24 +23,25 @@
 
 | 能力维度 | 小爱同学 | OpenClaw | 本项目取舍 |
 | --- | --- | --- | --- |
-| **交互入口** | 唤醒词（音箱/手机）、按键、触屏 | 多渠道消息（WhatsApp / Telegram / Discord / Slack 等）、CLI、Web、部分平台语音唤醒 | **全局热键 PTT**，单入口 |
-| **语音链路** | 端侧唤醒 + 云端 ASR/NLU/TTS `[待核]` | 可接多家语音 provider（Deepgram / Azure / ElevenLabs 等） | 云 ASR + 云 TTS + 本地 VAD |
+| **交互入口** | 唤醒词（音箱/手机）、按键、触屏 | 多渠道消息（WhatsApp / Telegram / Discord / Slack 等）、CLI、Web、部分平台语音唤醒 | **全局热键 PTT + 端侧唤醒词** |
+| **语音链路** | 端侧唤醒 + 云端 ASR/NLU/TTS `[待核]` | 可接多家语音 provider（Deepgram / Azure / ElevenLabs 等） | **全本地**：降噪 + VAD + ASR + TTS |
+| **离线能力** | 不可用（依赖云） | 部分（依赖云 LLM） | **全链路可离线** |
 | **意图与路由** | 意图 → 技能（Skill）匹配，槽位填充 | LLM 自主选择工具，Skill/Plugin 体系 | function calling + 内置 Registry |
 | **第三方接入** | 开放平台自定义技能（HTTP 回调）、AIVS 设备 SDK | Plugin / Skill / MCP / CLI 后端 | Tool Registry，MCP 作扩展（ADR-0002） |
 | **本地执行** | 无（能力在云与设备固件） | Shell / 文件 / 浏览器 / 计算机使用，带沙箱与审批 | 子进程 + 文件白名单 + 审批 |
 | **定时与自动化** | 闹钟、提醒、米家场景/自动化 | cron 任务、standing orders、hooks、heartbeat | APScheduler（cron + 延时） |
-| **长任务** | 以单轮技能为主，长任务弱 | Agent loop、子智能体、并行通道 | ReAct 循环 + 步数上限 |
-| **记忆** | 账号级偏好与画像 `[待核]` | 记忆引擎、会话压缩、主动记忆 | 最近 N 轮 + 摘要 + 偏好表 |
+| **长任务** | 以单轮技能为主，长任务弱 | Agent loop、子智能体、并行通道 | 轻量 ReAct + **委托外部 harness**（ADR-0008） |
+| **记忆** | 账号级偏好与画像 `[待核]` | 记忆引擎、会话压缩、主动记忆 | 最近 N 轮 + 摘要 + **Obsidian 笔记检索** |
 | **安全治理** | 账号体系、内容审核、设备权限 | 权限模式、exec 审批、沙箱、审计 | 风险分级 + 二次确认 + 审计日志 |
-| **打断** | 部分设备支持（连续对话、随时打断） | 流式输出、steering queue | 语音"停" + 播报中断 |
+| **打断** | 部分设备支持（连续对话、随时打断） | 流式输出、steering queue | **按键打断**（半双工）；语音打断列 P3 |
 
 ## 3. 技术栈对照
 
 | 维度 | 小爱同学 | OpenClaw | VoxDesk |
 | --- | --- | --- | --- |
-| 形态 | 端云一体，硬件 + 云服务 | 本机常驻 Gateway + 多渠道适配 | 本机单进程 |
-| 主语言 | 未公开 `[待核]` | TypeScript / Node | Python |
-| 模型 | 自研语音大模型（MiMo 系列）+ 云 NLU `[待核]` | 多 provider 抽象，可切本地模型 | OpenAI 兼容接口，多家可换 |
+| 形态 | 端云一体，硬件 + 云服务 | 本机常驻 Gateway + 多渠道适配 | 本机单进程 + 本地推理服务 |
+| 主语言 | 未公开 `[待核]` | TypeScript / Node | Python 3.11 |
+| 模型 | 自研语音大模型（MiMo 系列）+ 云 NLU `[待核]` | 多 provider 抽象，可切本地模型 | **本机 Ollama（Qwen3-4B/8B）+ 本地 ASR/TTS**，云仅可选 |
 | 扩展机制 | 技能开放平台（开发者接入） | Plugin / Skill / MCP | Tool Registry（+ MCP） |
 | 调度 | 云端定时服务 `[待核]` | 内置 cron 引擎 | APScheduler + SQLite |
 | 状态存储 | 云端账号体系 | 本地数据库 + 会话存储 | SQLite |

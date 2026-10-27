@@ -3,9 +3,9 @@
 | 字段 | 值 |
 | --- | --- |
 | 文档 | `docs/04-tech-stack.md` |
-| 版本 | v0.2.0 |
+| 版本 | v0.2.1 |
 | 状态 | 待确认 |
-| 更新 | 2026-10-26 14:30 +08:00 |
+| 更新 | 2026-10-27 14:40 +08:00 |
 | 生效范围 | 语言选型、框架选型、四层技术栈落地 |
 
 > **本版重大变化**：由"云优先"改为**本地优先**；由"全双工"改为**半双工先行**。
@@ -135,7 +135,7 @@ vad:
 
 | 候选 | 形态 | 首包延迟（CPU） | 中文自然度 | 许可 | 结论 |
 | --- | --- | --- | --- | --- | --- |
-| **Piper** | ONNX，分句流式 | 100–200ms | 中等（`zh_CN-huayan`） | MIT（音色需核对） | ✅ **M1 起步** |
+| **Piper**（现 `OHF-Voice/piper1-gpl`） | ONNX，分句流式 | 100–200ms | 中等（`zh_CN-huayan`） | **GPL-3.0**（原 MIT 仓库 2025-08 归档） | ✅ **M1 起步**；个人使用无碍，开源分发需评估 |
 | MeloTTS | PyTorch | 200–400ms | 较好 | MIT | 备选，替换成本低 |
 | Kokoro-82M | ONNX / PyTorch | 150–300ms | 好（中文音色有限） | Apache-2.0 | 备选 |
 | CosyVoice2-0.5B | 流式 LLM-TTS | 300–600ms（GPU 更佳） | 最好 | Apache-2.0 | ✅ **M6 升级目标** |
@@ -189,7 +189,7 @@ vad:
 | --- | --- | --- | --- |
 | LLM | **Qwen3-4B-Instruct**（Q4_K_M，~2.5GB） | Qwen3-8B（16GB 机器）、Qwen2.5-7B | 首 token、tool-calling 成功率 |
 | ASR | **Paraformer-zh 流式**（sherpa-onnx） | SenseVoice-Small、Whisper-small | 首字延迟、中文 CER |
-| TTS | **Piper** | MeloTTS / CosyVoice2 | 首包延迟、MOS |
+| TTS | **Piper**（piper1-gpl，GPL-3.0） | MeloTTS（MIT）/ CosyVoice（Apache-2.0） | 首包延迟、MOS、许可 |
 | VAD | **Silero VAD v5** | TEN-VAD | 端点准确率 |
 | KWS | **openWakeWord** | sherpa-onnx KWS | 唤醒率 / 误唤醒 |
 | Embedding | **bge-m3**（Ollama） | bge-small-zh | 检索 Recall@5 |
@@ -311,5 +311,6 @@ vault 本质是装满 `.md` 的目录，接入分四档：
 | 降噪伤语音 | ASR 反而变差 | 默认 bypass 可切，用 CER 做 A/B |
 | 唤醒误触发 | 半夜自己说话 | 二级 ASR 确认 + 静音时段禁用 |
 | Piper 中文音色机械 | 听感差 | M6 换 CosyVoice2，接口早已抽象 |
+| Piper 原仓库归档、继任转 GPL-3.0 | 维护性与许可 | 备选 CosyVoice（Apache-2.0）/ MeloTTS（MIT，已停更）；详见 `08-oss-shortlist.md` |
 | 模型许可 | 商用受限 | 全部选 Apache/MIT，逐一登记到 `docs/07` 的许可列 |
 | 8GB 机器跑不动 | 达不到验收 | 明确"最低档只保证 4B"，验收按档位分级 |

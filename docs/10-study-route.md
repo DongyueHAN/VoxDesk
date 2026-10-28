@@ -3,9 +3,9 @@
 | 字段 | 值 |
 | --- | --- |
 | 文档 | `docs/10-study-route.md` |
-| 版本 | v0.5.0 |
+| 版本 | v0.5.1 |
 | 状态 | 草案 |
-| 更新 | 2026-10-28 15:05 +08:00 |
+| 更新 | 2026-10-28 18:58 +08:00 |
 | 生效范围 | 如何拆解一个语音类开源项目、按什么顺序读、何时停止阅读 |
 
 ---
@@ -24,6 +24,18 @@
 
 **结论**：这份清单是一份很好的「**语音应用**」阅读阶梯，但不是 TTS 清单。
 想做 TTS，得换一条路（见 §3）。
+
+### 0.1 七份 README 速览（各 ≤140 字）
+
+| 仓库 | 总结 |
+| --- | --- |
+| `whisper` | OpenAI 通用语音识别模型，MIT。单 Transformer 以 token 化多任务统一识别、翻译、语种判定；六档模型 39M–1.55G，30 秒滑窗推理，依赖 PyTorch 与 ffmpeg，提供 CLI 与 Python API。 |
+| `OpenWhispr` | Electron 桌面听写应用，MIT。热键说话即在上光标处粘贴，可本地（whisper.cpp / sherpa-onnx）或云端转写；另含 AI agent、会议转写与说话人分离、笔记协作与 MCP 接口。 |
+| `SenseVoice` | QwenAudio 的语音基础模型，MIT。非自回归端到端，支持中粤英日韩识别，兼做情感识别与音频事件检测；较 Whisper-Small 快 5 倍以上，附微调脚本与多语言服务化部署。 |
+| `Handy` | Rust + Tauri 的跨平台听写应用，MIT，完全离线。热键录音，Silero VAD 滤静音，Whisper（GPU）或 Parakeet（CPU）转写，结果直接粘贴到当前输入框。 |
+| `FunASR` | 阿里工业级语音识别工具包，MIT。覆盖离线、流式与边缘部署；VAD、标点、说话人、情感模型可按 `AutoModel` 组合，提供 OpenAI 兼容服务与多语言客户端。 |
+| `silero-models` | Silero 的 TTS 模型仓库（v3–v5），一行代码调用、CPU 推理快、音色多；覆盖俄语及突厥、高加索、印度语系等，无中文；许可 CC BY-NC 4.0，仅限非商用。 |
+| `ququ` | 面向中文的开源听写工具，Wispr Flow 免费替代。Electron 界面 + 本地 FunASR（Paraformer、FSMN-VAD、CT-Transformer）识别，再由可配置 LLM 润色纠错，F2 唤醒、自动粘贴，Apache-2.0。 |
 
 ## 1. 两条路，别混着走
 

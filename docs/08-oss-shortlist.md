@@ -3,9 +3,9 @@
 | 字段 | 值 |
 | --- | --- |
 | 文档 | `docs/08-oss-shortlist.md` |
-| 版本 | v0.3.0 |
+| 版本 | v0.3.1 |
 | 状态 | 草案（仓库层筛选，未做实测） |
-| 更新 | 2026-10-27 14:40 +08:00 |
+| 更新 | 2026-10-28 14:50 +08:00 |
 | 生效范围 | 语音转文字（STT）与系统调用（harness）的开源候选 |
 
 > **数据口径**：2026-10-27 通过 GitHub REST API 逐仓库拉取，star / 许可 / 最近提交均为当时快照。
@@ -159,6 +159,20 @@
 | [coqui-ai/TTS](https://github.com/coqui-ai/TTS) | 46,151 | MPL-2.0 | 2024-08-16 | 公司已关停，仅作参考 |
 
 **建议**：M1 仍用 piper1-gpl（个人使用不涉及分发，GPL 无实际约束），但在 `04-tech-stack.md` 标注许可风险；若将来要开源，切 CosyVoice（Apache-2.0）或 MeloTTS（MIT）。
+
+### 3.2 按语言各选一个首选（2026-10-28 复核）
+
+| 语言 | 首选 | 备选 | 为什么 |
+| --- | --- | --- | --- |
+| **英文** | [hexgrad/kokoro](https://github.com/hexgrad/kokoro)（9.7k★，Apache-2.0）+ 运行时 [kokoro-onnx](https://github.com/thewh1teagle/kokoro-onnx)（2.8k★，MIT，2026-09 仍更新） | piper1-gpl | 82M 参数，音质/体积比最好，CPU 可实时；主仓库 2025-08 后停更，但权重稳定、ONNX 运行时活着 |
+| **中文** | [QwenAudio/CosyVoice](https://github.com/QwenAudio/CosyVoice)（24.2k★，Apache-2.0，2026-05 更新） | MeloTTS（MIT，CPU 可跑） | 中文效果第一梯队，支持流式与零样本克隆；代价是 0.5B 模型，CPU 实时性差 |
+
+**两点提醒**：
+
+1. **Kokoro 的中文支持很弱**——它解决的是"英文播报"，不解决本项目的中文主场景
+2. **CosyVoice 在无独显的机器上 RTF 可能 > 1**（比实时慢），演示会卡；纯 CPU 时先用 MeloTTS 或 sherpa-onnx 自带的 `vits-zh` 顶住，M6 再上 CosyVoice
+
+> 另：`2noise/ChatTTS`（40.0k★，中文很"口语化"）代码为 **AGPL-3.0**，若将来开源分发需评估传染性，故未列入首选。
 
 ---
 

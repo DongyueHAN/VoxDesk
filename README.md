@@ -5,8 +5,8 @@
 
 | 项 | 值 |
 | --- | --- |
-| 当前版本 | **v0.8.0（+ 决策落档、agent 规约）** |
-| 文档定稿 | 2026-10-29 15:35 +08:00 |
+| 当前版本 | **v0.9.0（+ 工程进程：三轴与闸门）** |
+| 文档定稿 | 2026-10-29 15:39 +08:00 |
 | 当前阶段 | M0.5 · TTS 模块（第一个可交付切片） |
 | 代码状态 | 待开工：路线、契约与阅读顺序已定 |
 | 关键技术决策 | 本地优先、半双工先行、自研语音管线、委托 harness |
@@ -44,6 +44,7 @@
 | [docs/09-tts-module.md](docs/09-tts-module.md) | **TTS 模块**：语言、架构、接口、三阶段实施与首日代码 | v0.4.1 |
 | [docs/10-study-route.md](docs/10-study-route.md) | **拆解路线**：9 个仓库的阅读顺序、三遍读法、停止阅读的判据 | v0.5.3 |
 | [docs/11-peer-repo-crosscheck.md](docs/11-peer-repo-crosscheck.md) | **同伴仓库核查**：12 条不一致（A/B/C 三级）+ 边界与接缝 | v0.1.1 |
+| [docs/12-process.md](docs/12-process.md) | **工程进程**：三轴节奏、四个冲刺、闸门、ADR 触发条件 | v0.1.0 |
 | [docs/adr/](docs/adr/) | 架构决策记录（10 份，含 ADR-0010 两仓边界） | — |
 | [CHANGELOG.md](CHANGELOG.md) | 版本变更流水（含时间戳） | 现行 |
 
@@ -53,12 +54,14 @@
 2. 架构图在 [docs/03-architecture.md](docs/03-architecture.md)；
 3. 选型理由在 [docs/04-tech-stack.md](docs/04-tech-stack.md) 与 [docs/07-model-layer.md](docs/07-model-layer.md)；
 4. 想知道"为什么这么定"，翻 [docs/adr/](docs/adr/)；
-5. 这活儿怎么拆、多久做完，看 [docs/05-roadmap.md](docs/05-roadmap.md)。
+5. 这活儿怎么拆、多久做完，看 [docs/05-roadmap.md](docs/05-roadmap.md)；
+6. 具体怎么干、学到什么程度停手，看 [docs/12-process.md](docs/12-process.md)。
 
 ## 4. 版本记录
 
 | 版本 | 时间 | 摘要 |
 | --- | --- | --- |
+| v0.9.0 | 2026-10-29 15:39 +08:00 | 新增工程进程：交付/学习/决策三轴、S0–S3 冲刺、三道闸门、ADR 只在三种情况写 |
 | v0.8.0 | 2026-10-29 15:35 +08:00 | 决策落档：ADR-0010 两仓独立、目标机 16GB 基线；新增 `AGENTS.md` 与 ADR 生命周期规则 |
 | v0.7.0 | 2026-10-29 15:12 +08:00 | 新增同伴仓库核查：12 条不一致分级、两仓边界与唯一接缝、答辩口径；补齐 README 版本漂移 |
 | v0.6.0 | 2026-10-29 15:10 +08:00 | 三份文档一致性校准：TTS 引擎链统一为四档，补"装不下流式引擎"的边界 |

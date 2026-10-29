@@ -5,8 +5,8 @@
 
 | 项 | 值 |
 | --- | --- |
-| 当前版本 | **v0.5.0（+ 拆解路线，准备开工）** |
-| 文档定稿 | 2026-10-28 15:05 +08:00 |
+| 当前版本 | **v0.7.0（+ 同伴仓库核查）** |
+| 文档定稿 | 2026-10-29 15:12 +08:00 |
 | 当前阶段 | M0.5 · TTS 模块（第一个可交付切片） |
 | 代码状态 | 待开工：路线、契约与阅读顺序已定 |
 | 关键技术决策 | 本地优先、半双工先行、自研语音管线、委托 harness |
@@ -35,13 +35,14 @@
 | [docs/01-scope.md](docs/01-scope.md) | 范围、场景、非目标、成功标准 | v0.2.0 |
 | [docs/02-requirements.md](docs/02-requirements.md) | 需求池 60 条（REQ-F/N/C）+ 验收标准 | v0.2.0 |
 | [docs/03-architecture.md](docs/03-architecture.md) | 架构：5 层、C4、6 张流程图、状态机、类图 | v0.2.0 |
-| [docs/04-tech-stack.md](docs/04-tech-stack.md) | **技术栈**：语言、框架、端侧四项、接入层 | v0.2.0 |
+| [docs/04-tech-stack.md](docs/04-tech-stack.md) | **技术栈**：语言、框架、端侧四项、接入层 | v0.2.1 |
 | [docs/05-roadmap.md](docs/05-roadmap.md) | 里程碑拆解 M0–M7 | v0.2.0 |
 | [docs/06-reference-landscape.md](docs/06-reference-landscape.md) | 小爱 / OpenClaw / 竞品 对照 | v0.2.0 |
 | [docs/07-model-layer.md](docs/07-model-layer.md) | **模型层**：选型、运行时、内存预算、工具调用可靠性 | v0.2.0 |
-| [docs/08-oss-shortlist.md](docs/08-oss-shortlist.md) | **开源选型**：STT 与系统调用 harness 候选、许可与活跃度 | v0.3.0 |
-| [docs/09-tts-module.md](docs/09-tts-module.md) | **TTS 模块**：语言、架构、接口、三阶段实施与首日代码 | v0.4.0 |
-| [docs/10-study-route.md](docs/10-study-route.md) | **拆解路线**：7 个仓库的阅读顺序、三遍读法、停止阅读的判据 | v0.5.0 |
+| [docs/08-oss-shortlist.md](docs/08-oss-shortlist.md) | **开源选型**：STT 与系统调用 harness 候选、许可与活跃度 | v0.3.2 |
+| [docs/09-tts-module.md](docs/09-tts-module.md) | **TTS 模块**：语言、架构、接口、三阶段实施与首日代码 | v0.4.1 |
+| [docs/10-study-route.md](docs/10-study-route.md) | **拆解路线**：9 个仓库的阅读顺序、三遍读法、停止阅读的判据 | v0.5.3 |
+| [docs/11-peer-repo-crosscheck.md](docs/11-peer-repo-crosscheck.md) | **同伴仓库核查**：12 条不一致（A/B/C 三级）+ 边界与接缝 | v0.1.0 |
 | [docs/adr/](docs/adr/) | 架构决策记录（9 份） | — |
 | [CHANGELOG.md](CHANGELOG.md) | 版本变更流水（含时间戳） | 现行 |
 
@@ -57,6 +58,8 @@
 
 | 版本 | 时间 | 摘要 |
 | --- | --- | --- |
+| v0.7.0 | 2026-10-29 15:12 +08:00 | 新增同伴仓库核查：12 条不一致分级、两仓边界与唯一接缝、答辩口径；补齐 README 版本漂移 |
+| v0.6.0 | 2026-10-29 15:10 +08:00 | 三份文档一致性校准：TTS 引擎链统一为四档，补"装不下流式引擎"的边界 |
 | v0.4.0 | 2026-10-28 14:35 +08:00 | 新增 TTS 模块设计：三阶段路线、WAV 为界的接口契约、首日可跑代码 |
 | v0.3.0 | 2026-10-27 14:40 +08:00 | 新增开源选型清单（STT/系统调用）；核查出 Piper 归档转 GPL 等三项维护性风险 |
 | v0.2.0 | 2026-10-26 14:30 +08:00 | 转向本地优先；半双工先行；新增端侧四项、模型层、接入层；需求 39→60 条 |

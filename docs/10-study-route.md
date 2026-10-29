@@ -3,14 +3,14 @@
 | 字段 | 值 |
 | --- | --- |
 | 文档 | `docs/10-study-route.md` |
-| 版本 | v0.5.1 |
+| 版本 | v0.5.2 |
 | 状态 | 草案 |
-| 更新 | 2026-10-28 18:58 +08:00 |
+| 更新 | 2026-10-29 14:40 +08:00 |
 | 生效范围 | 如何拆解一个语音类开源项目、按什么顺序读、何时停止阅读 |
 
 ---
 
-## 0. 先纠一个偏：那 7 个里只有 1 个是 TTS
+## 0. 先纠一个偏：这批仓库里只有 2 个是 TTS
 
 | 仓库 | 实际类别 | 一句话 |
 | --- | --- | --- |
@@ -19,13 +19,15 @@
 | `QwenAudio/SenseVoice` | **ASR + 情感/事件** | 非自回归，快，中粤英日韩 |
 | `cjpais/Handy` | **ASR 应用（桌面）** | 热键 → VAD → Whisper/Parakeet → 粘贴，单一职责 |
 | `modelscope/FunASR` | **ASR 工具包** | 工业级，VAD/标点/说话人可组合 |
-| `snakers4/silero-models` | **多任务（含 TTS）** | ← 唯一有 TTS；但**不含中文**，且 CC BY-NC 4.0 |
+| `snakers4/silero-models` | **TTS 模型仓库** | 含 TTS，但**不含中文**，且 CC BY-NC 4.0 |
 | `yan5xu/ququ` | **ASR 应用（中文）** | 中文听写，FunASR + LLM 两段式 |
+| `QwenAudio/CosyVoice` | **TTS 引擎** | LLM 式 TTS，9 语种 + 18 方言，零样本克隆 |
+| `snakers4/silero-vad` | **VAD 组件** | 端点检测，30ms 块 <1ms，TorchScript / ONNX |
 
-**结论**：这份清单是一份很好的「**语音应用**」阅读阶梯，但不是 TTS 清单。
-想做 TTS，得换一条路（见 §3）。
+**结论**：清单主体是「**语音应用**」的阅读阶梯，另有两个引擎/组件（CosyVoice、silero-vad）。
+只想要 TTS，直接走 §3；只想要 VAD，`silero-vad` 就是本项目 `CMP-01` 的既定选择。
 
-### 0.1 七份 README 速览（各 ≤140 字）
+### 0.1 九份 README 速览（各 ≤140 字）
 
 | 仓库 | 总结 |
 | --- | --- |
@@ -36,6 +38,8 @@
 | `FunASR` | 阿里工业级语音识别工具包，MIT。覆盖离线、流式与边缘部署；VAD、标点、说话人、情感模型可按 `AutoModel` 组合，提供 OpenAI 兼容服务与多语言客户端。 |
 | `silero-models` | Silero 的 TTS 模型仓库（v3–v5），一行代码调用、CPU 推理快、音色多；覆盖俄语及突厥、高加索、印度语系等，无中文；许可 CC BY-NC 4.0，仅限非商用。 |
 | `ququ` | 面向中文的开源听写工具，Wispr Flow 免费替代。Electron 界面 + 本地 FunASR（Paraformer、FSMN-VAD、CT-Transformer）识别，再由可配置 LLM 润色纠错，F2 唤醒、自动粘贴，Apache-2.0。 |
+| `CosyVoice` | 阿里 FunAudioLLM 的 LLM 式 TTS，Apache-2.0。CosyVoice3（0.5B）覆盖 9 语种与 18+ 中文方言，支持零样本克隆、双向流式（150ms）、拼音/CMU 发音修正与指令控制。 |
+| `silero-vad` | Silero 的预训练语音活动检测器，MIT、体积小。30ms 音频块单线程耗时不足 1ms，提供 TorchScript 与 ONNX 两种后端；一行 `get_speech_timestamps` 即可得到语音区间。 |
 
 ## 1. 两条路，别混着走
 

@@ -5,6 +5,21 @@
 
 ---
 
+## [v0.5.2] · 2026-10-29 14:40 +08:00 · 追加 CosyVoice 与 silero-vad
+
+**类型**：补充（PATCH）
+**范围**：`docs/10-study-route.md` §0 / §0.1
+**触发**：需求方追加两份 README（CosyVoice、silero-vad），要求同样各出一份 140 字内总结
+
+| ID | 变更 | 文件 |
+| --- | --- | --- |
+| CHG-0033 | 清单由 7 个扩至 9 个；分类结论由"仅 1 个 TTS"更正为"2 个 TTS + 1 个 VAD" | `docs/10` §0 |
+| CHG-0034 | 新增两条速览：CosyVoice（TTS 引擎）、silero-vad（VAD 组件） | 同上 §0.1 |
+
+**要点**：CosyVoice 是清单中唯一**中文可用**的 TTS 引擎；silero-vad 正是本项目 `CMP-01` 已选定的 VAD 实现。
+
+---
+
 ## [v0.5.1] · 2026-10-28 18:58 +08:00 · README 速览
 
 **类型**：补充（PATCH）

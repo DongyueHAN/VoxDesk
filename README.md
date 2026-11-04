@@ -5,8 +5,8 @@
 
 | 项 | 值 |
 | --- | --- |
-| 当前版本 | **v0.11.0（TTS 四选一：只有 piper 是引擎）** |
-| 文档定稿 | 2026-11-05 00:18 +08:00 |
+| 当前版本 | **v0.11.1（TTS 五选一：两个引擎，Piper 管实时、CosyVoice 管音质）** |
+| 文档定稿 | 2026-11-05 00:45 +08:00 |
 | 当前阶段 | M0.5 · TTS 模块 —— **S1 完成**，下一步 S2（换 Piper，验"可替换"） |
 | 代码状态 | **跑通 S0+S1**：`D:\VoxDesk\tts` v0.2.0（首音 91ms / 打断 38.8ms / 13 个单测） |
 | 关键技术决策 | 本地优先、半双工先行、自研语音管线、委托 harness |
@@ -141,11 +141,11 @@ flowchart TB
 | [docs/01-scope.md](docs/01-scope.md) | 范围、场景、非目标、成功标准 | v0.2.0 |
 | [docs/02-requirements.md](docs/02-requirements.md) | 需求池 60 条（REQ-F/N/C）+ 验收标准 | v0.2.0 |
 | [docs/03-architecture.md](docs/03-architecture.md) | 架构：5 层、C4、6 张流程图、状态机、类图 | v0.2.0 |
-| [docs/04-tech-stack.md](docs/04-tech-stack.md) | **技术栈**：语言、框架、端侧四项、接入层 | v0.2.3 |
+| [docs/04-tech-stack.md](docs/04-tech-stack.md) | **技术栈**：语言、框架、端侧四项、接入层 | v0.2.4 |
 | [docs/05-roadmap.md](docs/05-roadmap.md) | 里程碑拆解 M0–M7 | v0.2.0 |
 | [docs/06-reference-landscape.md](docs/06-reference-landscape.md) | 小爱 / OpenClaw / 竞品 对照 | v0.2.0 |
 | [docs/07-model-layer.md](docs/07-model-layer.md) | **模型层**：选型、运行时、内存预算、工具调用可靠性 | v0.2.0 |
-| [docs/08-oss-shortlist.md](docs/08-oss-shortlist.md) | **开源选型**：STT 与系统调用 harness 候选、许可与活跃度 | v0.4.0 |
+| [docs/08-oss-shortlist.md](docs/08-oss-shortlist.md) | **开源选型**：STT 与系统调用 harness 候选、许可与活跃度 | v0.4.1 |
 | [docs/09-tts-module.md](docs/09-tts-module.md) | **TTS 模块**：语言、架构、接口、三阶段实施与首日代码 | v0.4.4 |
 | [docs/10-study-route.md](docs/10-study-route.md) | **拆解路线**：9 个仓库的阅读顺序、三遍读法、停止阅读的判据 | v0.5.3 |
 | [docs/11-peer-repo-crosscheck.md](docs/11-peer-repo-crosscheck.md) | **同伴仓库核查**：12 条不一致（A/B/C 三级）+ 边界与接缝 | v0.1.1 |
@@ -166,6 +166,7 @@ flowchart TB
 
 | 版本 | 时间 | 摘要 |
 | --- | --- | --- |
+| v0.11.1 | 2026-11-05 00:45 +08:00 | 补入 CosyVoice：五选一变两个引擎，S2 仍用 Piper 当对照组，CosyVoice 归 M6 |
 | v0.11.0 | 2026-11-05 00:18 +08:00 | 新增 TTS 四选一横评：只有 piper1-gpl 是引擎；GPT-SoVITS 是应用、silero 无中文且非商用、unsloth 与 TTS 无关 |
 | v0.10.1 | 2026-11-04 19:40 +08:00 | C4 图迁入切片 README 并只画已实现（`CTX-07`/`C4-07`/`C3-07`）；计划项下沉到表 |
 | v0.10.0 | 2026-11-04 19:30 +08:00 | README 新增 C4-L1 上下文图、C4-L2 容器图与 12 组件进度表；新增"镜像图"规则 |

@@ -11,6 +11,43 @@
 | 依赖 | `pywin32==312`；开发依赖 `pytest==9.2.0` |
 | 测试 | 13 个单测（切句 + 队列/缓存），`uv run pytest -q` |
 
+## 它在系统里的位置
+
+本仓只实现系统里的一个组件：**`CMP-07` 播报器**的切片。系统级的上下文图与容器图
+（C4-L1 / C4-L2）在文档仓 `full-deplux dialogue system` 的 `README.md` §2，
+权威版本在 `docs/03-architecture.md`。
+
+下面是切片内部的 C4-L3 组件图——**代码结构就是这张图**：
+
+```mermaid
+%% diagram: C3-01 TTS 组件图 | updated: 2026-11-04
+flowchart LR
+    TXT["文本"] --> SPL["splitter<br/>分句 + 合并短句"]
+    SPL --> SQ["合成队列<br/>queue.Queue"]
+    SQ --> SRV["合成线程"]
+    SRV --> ENG{"TTSEngine<br/>协议"}
+    ENG -->|"当前"| SAPI["SapiEngine<br/>pywin32 COM"]
+    ENG -.->|"S2 待接"| PIPE["PiperEngine<br/>ONNX"]
+    SAPI --> CACHE[("cache/*.wav<br/>sha1 命名")]
+    PIPE -.-> CACHE
+    CACHE --> PQ["播放队列"]
+    PQ --> PT["播放线程"]
+    PT --> PLY["WavPlayer<br/>SND_ASYNC + 10ms 轮询"]
+    PLY --> SPK(["扬声器"])
+    STOP["stop()"] -.->|"换代 + 清空"| SQ
+    STOP -.->|"purge"| PLY
+```
+
+| 本仓的类 | 系统里的位置 | 文档 |
+| --- | --- | --- |
+| `TTSService` | `CMP-07` 播报器的编排 | `docs/09` §3、§7 |
+| `TTSEngine`（协议） | 引擎适配层，S2 换 Piper 的唯一开关 | `docs/09` §4 |
+| `WavPlayer.stop()` | 热键打断（`REQ-F-003`）的落地 | `docs/09` §10 |
+| `TTSService.speak()` | `IF-05 Speak(text_stream) -> PlaybackHandle` | `docs/03` §4 |
+
+**读图要点**：`TTSEngine` 是菱形——它是唯一的可替换点。`SapiEngine` 与未来的
+`PiperEngine` 都挂在它下面，箭头方向说明"编排不依赖具体引擎"。
+
 ## 实测
 
 | 项 | 结果 |

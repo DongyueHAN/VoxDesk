@@ -5,9 +5,9 @@
 
 | 项 | 值 |
 | --- | --- |
-| 当前版本 | **v0.14.0（S3 跑通：音频前端能断句）** |
-| 文档定稿 | 2026-11-05 02:05 +08:00 |
-| 当前阶段 | **S3 主体完成**（音频前端切错 0 条）；M1 收尾剩降噪 + PTT |
+| 当前版本 | **v0.15.0（M1 完成：端点 + 降噪 + PTT）** |
+| 文档定稿 | 2026-11-05 02:15 +08:00 |
+| 当前阶段 | **M1 完成**（采集 / 端点 / 降噪 / PTT）；下一步 M2 接 ASR |
 | 代码状态 | **跑通 S0–S3**：`D:\VoxDesk\tts` v0.3.0 + `audio` v0.4.0（Piper RTF 0.026；端点切错 0/50） |
 | 关键技术决策 | 本地优先、半双工先行、自研语音管线、委托 harness |
 
@@ -141,7 +141,7 @@ flowchart TB
 | [docs/01-scope.md](docs/01-scope.md) | 范围、场景、非目标、成功标准 | v0.2.0 |
 | [docs/02-requirements.md](docs/02-requirements.md) | 需求池 60 条（REQ-F/N/C）+ 验收标准 | v0.2.0 |
 | [docs/03-architecture.md](docs/03-architecture.md) | 架构：5 层、C4、6 张流程图、状态机、类图 | v0.2.0 |
-| [docs/04-tech-stack.md](docs/04-tech-stack.md) | **技术栈**：语言、框架、端侧四项、接入层 | v0.2.6 |
+| [docs/04-tech-stack.md](docs/04-tech-stack.md) | **技术栈**：语言、框架、端侧四项、接入层 | v0.2.7 |
 | [docs/05-roadmap.md](docs/05-roadmap.md) | 里程碑拆解 M0–M7（KWS 归 M2） | v0.2.1 |
 | [docs/06-reference-landscape.md](docs/06-reference-landscape.md) | 小爱 / OpenClaw / 竞品 对照 | v0.2.0 |
 | [docs/07-model-layer.md](docs/07-model-layer.md) | **模型层**：选型、运行时、内存预算、工具调用可靠性 | v0.2.0 |
@@ -165,6 +165,7 @@ flowchart TB
 
 | 版本 | 时间 | 摘要 |
 | --- | --- | --- |
+| v0.15.0 | 2026-11-05 02:15 +08:00 | M1 完成：谱减降噪（bypass）+ PTT 热键；0dB 下切错 1→0，15 个单测 |
 | v0.14.0 | 2026-11-05 02:05 +08:00 | S3 跑通：Silero VAD 端点，50 句切错 0 条；踩到 64 点上下文坑 |
 | v0.13.1 | 2026-11-05 01:40 +08:00 | KWS 从 M1 挪到 M2，与 S3 定义对齐（S3 只做端点 + PTT） |
 | v0.13.0 | 2026-11-05 01:00 +08:00 | 08 与 10 合并为一份开源调研（11 节 + 附录）；10 退休，一个仓库只出现一次 |

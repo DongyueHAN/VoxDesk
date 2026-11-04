@@ -13,6 +13,10 @@ tts/cache/
 *.wav
 *.mp3
 
+# ---- Obsidian（把本仓当 vault 打开时自动生成）----
+.obsidian/
+.trash/
+
 # ---- 编辑器 / 系统 ----
 .vscode/
 .idea/

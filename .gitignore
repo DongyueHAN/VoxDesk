@@ -29,3 +29,7 @@ models/
 Thumbs.db
 desktop.ini
 ~$*
+
+# ---- demo（分支专用）----
+demo/cache/
+demo/out/

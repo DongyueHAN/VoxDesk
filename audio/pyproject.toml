@@ -1,6 +1,6 @@
 [project]
 name = "voxdesk-audio"
-version = "0.2.0"
+version = "0.3.0"
 description = "VoxDesk 端侧音频前端：采集 + Silero VAD 端点（S3）"
 requires-python = "==3.11.*"
 dependencies = [
@@ -8,6 +8,7 @@ dependencies = [
     "sounddevice>=0.5",
     "onnxruntime>=1.20",
     "keyboard>=0.13.5",
+    "sherpa-onnx>=2.0.1",
 ]
 
 [build-system]

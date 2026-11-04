@@ -14,9 +14,10 @@ tts/cache/
 *.mp3
 
 # ---- 模型权重（几十 MB 到几 GB，按需下载）----
-tts/models/
+models/
 *.onnx
 *.onnx.json
+*.tar.bz2
 
 # ---- Obsidian（把本仓当 vault 打开时自动生成）----
 .obsidian/

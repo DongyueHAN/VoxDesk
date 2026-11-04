@@ -1,14 +1,15 @@
-# audio · 端侧音频前端（S3 / M1）
+# audio · 端侧音频前端（M1 + S4 ASR）
 
-> **S3 已跑通**（2026-11-05）：50 句合成语料，端点 **切错 0 条**（判据 ≤ 5）；降噪与 PTT 已就位。
+> **M1（S3）已跑通**（2026-11-05）：50 句合成语料，端点 **切错 0 条**（判据 ≤ 5）；降噪与 PTT 已就位。
+> **S4 已跑通**（2026-11-05）：`sherpa-onnx` 流式 Paraformer，**首字 39ms**（判据 ≤ 500ms），RTF 0.06。
 
 | 项 | 值 |
 | --- | --- |
-| 冲刺 | S3 = `M1`（见文档仓 `12-process.md` §3） |
-| 职责 | 采集 → 帧 → 降噪（可 bypass）→ Silero VAD 概率 → 端点状态机 → `Segment`；PTT 按住说话 |
-| 不做 | ASR（M2 的 sherpa-onnx）、唤醒（M2 的 openWakeWord） |
-| 依赖 | `sounddevice` / `numpy` / `onnxruntime` / `keyboard`；模型 `silero_vad.onnx`（2.3 MB，gitignore） |
-| 测试 | **15 个单测**（端点 7 + 降噪/PTT 8）+ 2 个验收脚本 |
+| 冲刺 | S3 = `M1`；S4 = ASR 单点（见文档仓 `12-M1process.md`、`13-M2process.md`） |
+| 职责 | 采集 → 降噪（可 bypass）→ VAD 端点 → `Segment` → **ASR → text**；PTT 按住说话 |
+| 不做 | 唤醒（M2/S6 的 openWakeWord）、串联（M2/S7 的 pipeline） |
+| 依赖 | `sounddevice` / `numpy` / `onnxruntime` / `keyboard` / **`sherpa-onnx`**；模型：VAD 2.3MB + ASR 226MB（均 gitignore） |
+| 测试 | **15 个单测**（端点 7 + 降噪/PTT 8）+ 3 个验收/评测脚本 |
 
 > **图的编号规则**：切片内部的图用 `<切片>-L1/L2/L3`（`AUD-*`），**不与文档仓的 `CTX-`/`C4-` 共用编号空间**——那两个 ID 已被 `docs/03` 的系统级图占用。
 
@@ -137,21 +138,64 @@ uv run python scripts/vad_live.py --ptt f2
 # 离线验收
 uv run python scripts/accept_s3.py --corpus out/corpus --sweep 300,450,600,800
 uv run python scripts/denoise_ab.py --corpus out/corpus --snr inf,10,5,0
+
+# ASR（S4）
+uv run python scripts/asr_file.py out/corpus/01.wav      # 单文件：文本 + 首字 + RTF
+uv run python scripts/asr_cer.py --corpus out/corpus     # 50 句整体 CER
 ```
 
 ### 怎么造语料
+
+语料必须与 `scripts/asr_cer.py` 里的 `POOL` **同一套文本**，否则 CER 的比较对象就错了：
 
 ```powershell
 cd D:\VoxDesk\tts
 uv run python -c "
 from pathlib import Path
 from voxdesk_tts import PiperEngine
+pool = [
+ '第一句测试。语音端点检测要判断一句话什么时候开始。',
+ '第二句稍长一点，用来观察中段停顿会不会被误切。',
+ '第三句很短。',
+ '第四句带问号，这样可以吗？',
+ '第五句带感叹号！',
+ '第六句分成两半，中间有一个逗号停顿，但不应该断开。',
+ '第七句里有很多字，因为要验证长句不会被中间的换气声切断，所以写得长一些再长一些。',
+ '第八句。',
+ '第九句包含数字二零二六和英文单词 VoxDesk。',
+ '第十句收尾，看看最后一段能不能被 flush 吐出来。',
+]
 out = Path(r'D:\VoxDesk\audio\out\corpus'); out.mkdir(parents=True, exist_ok=True)
 e = PiperEngine(warmup=True)
 for i in range(50):
-    e.synth(f'第{i+1}句测试。语音端点检测要判断一句话什么时候开始，什么时候结束。', out / f'{i+1:02d}.wav')
+    e.synth(pool[i % len(pool)], out / f'{i+1:02d}.wav')
 "
 ```
+
+## ASR（S4）
+
+`asr.py` 自动识别模型类型（有 `joiner` 走 zipformer，没有走 paraformer），调用方只认 `transcribe()`。
+
+| 模型 | 体积（int8） | 自有语料 CER | 首字 | 实时因子 | 结论 |
+| --- | --- | --- | --- | --- | --- |
+| `zipformer-zh-14M` | 25 MB | 34.3% | 9 ms | 0.013 | ❌ 太小，听不准，不可用 |
+| **`streaming-paraformer-bilingual-zh-en`** | **226 MB** | **24.3%** | **39 ms** | **0.060** | ✅ 当前选型 |
+
+**两个数字要一起读**：
+
+- 用模型自带的**真人录音**（`test_wavs/`）跑，文本**可读**，中英混说也对："昨天是 monday today is 礼拜二 the day after tomorrow 是星期三"
+- 自有 TTS 语料的 CER 24.3% 是**偏悲观**的：piper 合成的韵律不自然，ASR 会把"句/局""测试/措施""端点/断点"听混。真人语音要另测
+
+### 坑：流式模型需要尾巴静音
+
+不加尾部 padding 时，模型的最后几个字会**被截断**（"第三句很短" → "第三"）：
+
+| 做法 | 整体 CER |
+| --- | --- |
+| 不加 pad | 31.4% |
+| **加 500ms 尾巴静音** | **24.3%** |
+
+`transcribe(..., tail_pad_ms=500)` 是默认值——这不是调参玄学，是流式 ASR 的常识：模型要"看到一段静音"才敢吐出最后一个 token。
 
 ## 两个坑（都写过注释）
 
@@ -173,12 +217,14 @@ Silero 的 ONNX 模型**内部带 64 点上下文**（16k）。正确用法是 `
 
 | 限制 | 影响 | 何时解决 |
 | --- | --- | --- |
+| ASR 在 TTS 语料上 CER 24.3% | 合成音韵律不自然，数字偏悲观 | 真人录音另测；S7 串联后再评 |
+| 流式 ASR 需要 500ms 尾巴静音 | 每句话多等 0.5s 才出终稿 | 首字只要 39ms，够用；S7 用"部分结果"抢时间 |
 | 降噪是谱减，不是 RNNoise | 对非稳态噪声（键盘、街道）效果弱 | 拿到 RNNoise/DFN3 的库时换 backend |
 | 降噪引入 16ms 延迟 | PTT/VAD 的起点再晚 16ms | 可接受；流式化时一起处理 |
 | 端点起点误差 ~64ms | 句首第一个字偶尔被削 | 调大 `speech_pad_ms`（现 100ms） |
 | PTT 依赖 `keyboard` 全局钩子 | 受控桌面/远程会话可能装不上 | 失败时退回 VAD 自动断句 |
 | 只支持 16k 单声道输入 | 44.1k 设备先重采样 | 够用，不做 |
 
-## 下一步
+## 下一步（S5）
 
-M2：`sherpa-onnx` + Paraformer 流式 ASR 接上，把 `Segment` 变成文本；KWS（openWakeWord）也归 M2。
+LLM 接入：`ollama pull qwen3:4b` + OpenAI 兼容接口，闸门是**首 token ≤ 1.2s**、10 条指令工具调用合法 ≥ 8 条。

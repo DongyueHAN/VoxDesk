@@ -3,9 +3,9 @@
 | 字段 | 值 |
 | --- | --- |
 | 文档 | `docs/08-oss-shortlist.md` |
-| 版本 | v0.3.3 |
+| 版本 | v0.4.0 |
 | 状态 | 草案（仓库层筛选，未做实测） |
-| 更新 | 2026-10-29 15:10 +08:00 |
+| 更新 | 2026-11-05 00:18 +08:00 |
 | 生效范围 | 语音转文字（STT）与系统调用（harness）的开源候选 |
 
 > **数据口径**：2026-10-27 通过 GitHub REST API 逐仓库拉取，star / 许可 / 最近提交均为当时快照。
@@ -173,6 +173,66 @@
 2. **CosyVoice 在无独显的机器上 RTF 可能 > 1**（比实时慢），演示会卡；纯 CPU 时先用 MeloTTS 或 sherpa-onnx 自带的 `vits-zh` 顶住，M6 再上 CosyVoice
 
 > 另：`2noise/ChatTTS`（40.0k★，中文很"口语化"）代码为 **AGPL-3.0**，若将来开源分发需评估传染性，故未列入首选。
+
+### 3.3 TTS 四选一：谁是引擎、谁是应用（2026-11-05 读 README 核实）
+
+需求方给了四个仓库，问"哪个能替换 Piper、哪个是应用"。**先分清物种，再比性能**——这四个东西根本不是一类：
+
+| 项目 | README 自述 | 物种 | 中文 | 许可 | 速度（README 数字） | 能替换 Piper？ |
+| --- | --- | --- | --- | --- | --- | --- |
+| [`OHF-Voice/piper1-gpl`](https://github.com/OHF-Voice/piper1-gpl) 6.2k★ | "fast and local neural TTS **engine**" | **引擎** | ✅ `zh_CN-huayan` | GPL-3.0 | 未给数字；`04` §3.4 记录首包 100–200ms | —— 它就是基准 |
+| [`RVC-Boss/GPT-SoVITS`](https://github.com/RVC-Boss/GPT-SoVITS) 64.8k★ | "Few-shot Voice Conversion and TTS **WebUI**" | **应用** | ✅ 中 / 英 / 日 / 韩 / 粤 | MIT | RTF **0.028**（4060Ti）、**0.014**（4090）、**0.526**（M4 CPU） | ❌ 形态不对 |
+| [`snakers4/silero-models`](https://github.com/snakers4/silero-models) 6.2k★ | "pre-trained **TTS models** made embarrassingly simple" | **模型库** | ❌ **无中文** | **CC BY-NC 4.0**（仅 CIS base 为 MIT） | 未给数字；CPU 可跑 | ❌ 语种 + 许可双重不合格 |
+| [`unslothai/unsloth`](https://github.com/unslothai/unsloth) 79k★ | "desktop app to run and **train models**" | **训练/运行平台** | —— | Apache-2.0 | —— | ❌ 它不合成语音 |
+
+#### 四句话分清物种
+
+| 物种 | 判据 | 例子 |
+| --- | --- | --- |
+| **引擎** | `pip install` 完就能 `synth(text) -> wav`，不拖界面 | `piper1-gpl`（CLI / Python / C++ / HTTP 四种入口） |
+| **应用** | 有 WebUI、有训练与标注流程，顺手能出声 | `GPT-SoVITS`（WebUI + 数据切分 + ASR 标注 + UVR5） |
+| **模型库** | 只给权重和 `apply_tts()`，前后端自己搭 | `silero-models`（`torch.hub` 或 `pip install silero`） |
+| **训练平台** | 能把 TTS 模型训得更小更快，但不负责合成 | `unsloth`（TTS 只是它能训的模型类型之一） |
+
+**唯一硬判据**：能不能直接实现 `TTSEngine.synth(text, out_path) -> None`，且不把一整个 WebUI 拖进来。
+按这条，**四个里只有 `piper1-gpl` 是引擎**——"替换 Piper"这个问法，在给定清单里没有第二个答案。
+
+#### 与 S2 决策对比：各引擎的优势场景
+
+`12` 定的 S2 是**在 Piper 上验证"可替换"**，不是"选音质最好的"。按场景对齐看：
+
+| 场景 | SAPI（现状） | **Piper（S2）** | GPT-SoVITS | silero-models | unsloth |
+| --- | --- | --- | --- | --- | --- |
+| **中文实时播报**（主场景） | ✅ 但机械 | ✅ **最优解** | ⚠️ 要 GPU；纯 CPU 上 RTF 0.53 | ❌ 无中文 | ❌ |
+| **首音 < 1.5s** | ✅ | ✅ | ❌ CPU 上做不到 | —— | —— |
+| **用你自己的声音播报** | ❌ | ❌ | ✅ **5s 零样本 / 1min 微调** | ❌ | ❌ |
+| 英文播报 | ✅ | ✅ | ✅ | ✅ | ❌ |
+| 中文质量上限 | 低 | 中 | **高** | —— | —— |
+| 许可友好度 | 系统自带 | ⚠️ GPL-3.0 | ✅ MIT | ❌ **非商用** | ✅ Apache-2.0 |
+| 部署成本 | 0 | ~60MB 模型 | 数 GB（PyTorch + 权重） | 数百 MB | 数 GB |
+
+**为什么 S2 不改用 GPT-SoVITS**——把账算清楚：
+
+- 我们 S1 实测：单段合成 **0.05s**（SAPI，实时因子 0.009）
+- GPT-SoVITS 的 RTF 0.028 是 **4060Ti** 的数；同一份 README 里 CPU（M4）是 **0.526**
+- 按 0.526 算，10 秒音频要 **5.3 秒**合成——"首音 1.5s"的判据直接不成立
+- 本机按 `04` §9 的 16GB / 无独显档位验收，**不能假设有 4060Ti**
+
+**结论：S2 维持 Piper。** GPT-SoVITS 解决的是"像不像你"，S2 要的是"快不快、能不能换"。
+
+#### 什么情况下它会变成正确答案
+
+| 触发条件 | 用法 | 为什么不是现在 |
+| --- | --- | --- |
+| 要做"用我自己的声音播报"（简历亮点） | **离线预生成 + 缓存**，播客式长摘要 | 属 M6 之后的可选增强，且必须 GPU |
+| 中文音质成为验收项 | 与 CosyVoice 二选一 | CosyVoice 支持流式，更贴对话场景 |
+
+> 一句话：**Piper 是"实时对话"的引擎，GPT-SoVITS 是"内容生产"的引擎。** 两者 RTF 差两个数量级，不是调参能追上的。
+
+#### 顺带核实的两件事
+
+1. **Piper 的继任者也在招维护者**——README 顶部写着 "The Open Home Foundation is looking for maintainers for Piper"（2026-11-05）。`04` §10 那条许可风险要补一句：**继任者同样缺人**。
+2. **unsloth 不是 TTS，但它认识我们的 harness**——它支持 `unsloth start dsh / codex / openclaw`，即"一条命令把本地模型接给编码 agent"。这对 **M5 的 harness 桥**有参考价值，虽然与 TTS 无关。
 
 ---
 

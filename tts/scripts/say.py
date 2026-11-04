@@ -14,7 +14,7 @@ import json
 import sys
 from pathlib import Path
 
-from voxdesk_tts import SapiEngine, TTSService, enable_utf8
+from voxdesk_tts import TTSService, enable_utf8, make_engine
 
 
 def main() -> int:
@@ -24,7 +24,9 @@ def main() -> int:
     src = ap.add_mutually_exclusive_group()
     src.add_argument("--text", help="要念的文字")
     src.add_argument("--file", help="从文件读（UTF-8）")
-    ap.add_argument("--voice", default=None, help="音色名，支持模糊匹配")
+    ap.add_argument("--engine", default="sapi", choices=["sapi", "piper"], help="引擎")
+    ap.add_argument("--model", default=None, help="Piper 模型路径（默认 models/zh_CN-huayan-medium.onnx）")
+    ap.add_argument("--voice", default=None, help="音色名，支持模糊匹配（仅 sapi）")
     ap.add_argument("--rate", type=int, default=0, help="语速 -10..10")
     ap.add_argument("--max-len", type=int, default=50, help="每段最大字数")
     ap.add_argument("--stop-after", type=float, default=None, help="播 N 秒后调用 stop()")
@@ -38,7 +40,7 @@ def main() -> int:
     else:
         text = "第一句。第二句。第三句。这是 S1 的默认测试文本。"
 
-    engine = SapiEngine(voice=args.voice, rate=args.rate)
+    engine = make_engine(args.engine, voice=args.voice, rate=args.rate, model=args.model)
     with TTSService(engine, cache_dir="cache", max_len=args.max_len) as service:
         segments = service.speak(text)
         print(f"→ {len(text)} 字，切成 {segments} 段")

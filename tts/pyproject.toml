@@ -1,9 +1,10 @@
 [project]
 name = "voxdesk-tts"
-version = "0.2.0"
+version = "0.3.0"
 description = "VoxDesk TTS 切片：S0 = SAPI 出声"
 requires-python = "==3.11.*"
 dependencies = [
+    "piper-tts>=1.8.0",
     "pywin32>=306",
 ]
 

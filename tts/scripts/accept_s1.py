@@ -22,7 +22,7 @@ import sys
 import time
 from pathlib import Path
 
-from voxdesk_tts import SapiEngine, TTSService, enable_utf8, split
+from voxdesk_tts import TTSService, enable_utf8, make_engine, split
 from voxdesk_tts.splitter import normalize
 
 PARA = (
@@ -107,7 +107,9 @@ def check_cache(service: TTSService, cache_dir: Path) -> tuple[bool, str]:
 def main() -> int:
     enable_utf8()
 
-    ap = argparse.ArgumentParser(description="S1 验收")
+    ap = argparse.ArgumentParser(description="S1/S2 验收")
+    ap.add_argument("--engine", default="sapi", choices=["sapi", "piper"])
+    ap.add_argument("--model", default=None, help="Piper 模型路径（默认 models/zh_CN-huayan-medium.onnx）")
     ap.add_argument("--no-audio", action="store_true", help="只测分句，不出声")
     args = ap.parse_args()
 
@@ -117,14 +119,14 @@ def main() -> int:
     rows.append(("B-1 分句", ok, detail))
 
     if not args.no_audio:
-        engine = SapiEngine()
-        cache_dir = Path("cache") / "accept"
+        engine = make_engine(args.engine, model=args.model)
+        cache_dir = Path("cache") / f"accept-{args.engine}"
         with TTSService(engine, cache_dir=cache_dir) as service:
             rows.append(("B-2 首音", *check_first_audio(service, cache_dir)))
             rows.append(("B-3 打断", *check_stop(service)))
             rows.append(("B-4 缓存", *check_cache(service, cache_dir)))
 
-    print("\nS1 验收结果")
+    print(f"\n验收结果（引擎 {args.engine}）")
     print("-" * 72)
     for name, ok, detail in rows:
         print(f"{'✅' if ok else '❌'} {name:<8} {detail}")

@@ -5,48 +5,126 @@
 
 | 项 | 值 |
 | --- | --- |
-| 冲刺 | S0 · 环境与出声 → **S1 · TTS 可交付**（见 `docs/12-process.md`） |
+| 冲刺 | S0 · 环境与出声 → **S1 · TTS 可交付**（见文档仓 `docs/12-process.md`） |
 | 引擎 | Windows SAPI 5（`pywin32`）；S2 换 Piper 时只改 `engine.py` |
 | 解释器 | Python 3.11.17（uv 管理，落在 `D:\uv-python\`） |
 | 依赖 | `pywin32==312`；开发依赖 `pytest==9.2.0` |
 | 测试 | 13 个单测（切句 + 队列/缓存），`uv run pytest -q` |
 
-## 它在系统里的位置
+---
 
-本仓只实现系统里的一个组件：**`CMP-07` 播报器**的切片。系统级的上下文图与容器图
-（C4-L1 / C4-L2）在文档仓 `full-deplux dialogue system` 的 `README.md` §2，
-权威版本在 `docs/03-architecture.md`。
+## 已实现的 C4 图
 
-下面是切片内部的 C4-L3 组件图——**代码结构就是这张图**：
+**这张图的第一条规则：图里出现 = 代码里存在。** 计划中但没写的东西不进图，只进 §3.4 的表。
+所以这三张图会随代码长，而不是随想法长——它们能当"实现进度"用。
+
+### 3.1 `CTX-07` · 上下文（已实现）
+
+它跟谁打交道。**没有网络节点、没有云端**，因为现在真的没有。
 
 ```mermaid
-%% diagram: C3-01 TTS 组件图 | updated: 2026-11-04
+%% diagram: CTX-07 TTS 切片上下文（已实现） | updated: 2026-11-04
 flowchart LR
-    TXT["文本"] --> SPL["splitter<br/>分句 + 合并短句"]
-    SPL --> SQ["合成队列<br/>queue.Queue"]
-    SQ --> SRV["合成线程"]
-    SRV --> ENG{"TTSEngine<br/>协议"}
-    ENG -->|"当前"| SAPI["SapiEngine<br/>pywin32 COM"]
-    ENG -.->|"S2 待接"| PIPE["PiperEngine<br/>ONNX"]
-    SAPI --> CACHE[("cache/*.wav<br/>sha1 命名")]
-    PIPE -.-> CACHE
-    CACHE --> PQ["播放队列"]
-    PQ --> PT["播放线程"]
-    PT --> PLY["WavPlayer<br/>SND_ASYNC + 10ms 轮询"]
-    PLY --> SPK(["扬声器"])
-    STOP["stop()"] -.->|"换代 + 清空"| SQ
-    STOP -.->|"purge"| PLY
+    CALL["调用方<br/>scripts/say.py · accept_s1.py"]
+    TTS["TTS 切片<br/>voxdesk_tts · Python 3.11"]
+    SAPI["Windows SAPI 5<br/>SpVoice / SpFileStream（COM）"]
+    WINMM["Windows 音频<br/>winsound.PlaySound（winmm）"]
+    SPK(["扬声器"])
+    DISK[("本地磁盘<br/>cache/ · out/")]
+
+    CALL -->|"speak() / stop()"| TTS
+    TTS -->|"合成请求（COM）"| SAPI
+    SAPI -->|"WAV · PCM 22.05kHz"| DISK
+    TTS -->|"读取 WAV"| DISK
+    TTS -->|"异步播放 / purge"| WINMM
+    WINMM --> SPK
 ```
 
-| 本仓的类 | 系统里的位置 | 文档 |
-| --- | --- | --- |
-| `TTSService` | `CMP-07` 播报器的编排 | `docs/09` §3、§7 |
-| `TTSEngine`（协议） | 引擎适配层，S2 换 Piper 的唯一开关 | `docs/09` §4 |
-| `WavPlayer.stop()` | 热键打断（`REQ-F-003`）的落地 | `docs/09` §10 |
-| `TTSService.speak()` | `IF-05 Speak(text_stream) -> PlaybackHandle` | `docs/03` §4 |
+**读法**：两个 Windows 子系统分工明确——**SAPI 只负责合成**（写 WAV），**winmm 只负责播放**。
+把它们画成一条线是错的，这也是 S1 打断能做成的前提：播放受我们自己的线程控制。
 
-**读图要点**：`TTSEngine` 是菱形——它是唯一的可替换点。`SapiEngine` 与未来的
-`PiperEngine` 都挂在它下面，箭头方向说明"编排不依赖具体引擎"。
+### 3.2 `C4-07` · 运行容器（已实现）
+
+进程与线程边界。整个切片是**一个 `python.exe` 进程**，没有服务、没有端口。
+
+```mermaid
+%% diagram: C4-07 TTS 切片容器（已实现） | updated: 2026-11-04
+flowchart TB
+    subgraph PROC["python.exe · 单进程 · .venv"]
+        CLI["CLI 线程<br/>say.py / accept_s1.py"]
+        SVC["TTSService<br/>队列 · 换代 · 缓存键"]
+        SYN["tts-synth 线程"]
+        PLAY["tts-play 线程"]
+    end
+    subgraph OS["Windows 本机子系统"]
+        SAPI["SAPI 5（COM）"]
+        WINMM["winmm"]
+    end
+    CACHE[("cache/*.wav")]
+    SPK(["扬声器"])
+
+    CLI -->|"speak() 立刻返回"| SVC
+    SVC -->|"投递分段"| SYN
+    SYN -->|"SapiEngine.synth"| SAPI
+    SAPI -->|"写文件"| CACHE
+    SYN -->|"WAV 路径"| PLAY
+    PLAY -->|"WavPlayer.play"| WINMM
+    WINMM --> SPK
+    SVC -.->|"stop()：换代 + 清空 + purge"| PLAY
+```
+
+**读法**：三个线程各司其职——CLI 只投递，`tts-synth` 只合成，`tts-play` 只播放。
+`stop()` 不阻塞等待，它改代号（generation）让队列里的旧任务自然作废。
+
+### 3.3 `C3-07` · 代码组件（已实现）
+
+模块与类，以及唯一那个可替换点。
+
+```mermaid
+%% diagram: C3-07 TTS 切片组件（已实现） | updated: 2026-11-04
+flowchart LR
+    subgraph PURE["纯函数 · 可单测"]
+        SPL["splitter.split<br/>句末断 → 合并短句 → 超长硬切"]
+    end
+    subgraph SERVICE["service.py"]
+        SVC["TTSService"]
+        Q1["合成队列"]
+        Q2["播放队列"]
+        GEN["换代计数<br/>_gen + 1"]
+        KEY["缓存键<br/>sha1(engine.signature + text)"]
+    end
+    subgraph ADAPTER["适配层"]
+        ENG{{"TTSEngine 协议<br/>voices() · synth()"}}
+        SAPI_E["SapiEngine"]
+        PLY["WavPlayer"]
+    end
+
+    SPL -->|"list[str]"| SVC
+    SVC --> GEN
+    SVC --> KEY
+    SVC --> Q1
+    Q1 -->|"text + wav 路径"| SAPI_E
+    SAPI_E --> Q2
+    Q2 --> PLY
+    ENG -.->|"被实现"| SAPI_E
+```
+
+**读法**：六边形是 `TTSEngine` 协议——**全仓唯一的可替换点**。
+`service.py` 只认协议不认 SAPI，所以 S2 加 `PiperEngine` 时它一行不改。
+`splitter` 是纯函数，因此可以脱离声卡猛测（9 个用例）。
+
+### 3.4 未实现（刻意不画）
+
+| 计划 | 属于 | 会出现在图里的条件 |
+| --- | --- | --- |
+| `PiperEngine`（`piper1-gpl`） | S2 | 模型下载完、`accept_s1.py` 在 Piper 上跑通 |
+| 流式合成 `synth_chunks()` | M6 | 接 CosyVoice 时才需要（`docs/09` §3.3） |
+| 与 `CMP-02` 会话网关的对接 | M2 | 上层打通后，`TTSService.speak()` 变成 `IF-05` 的一个实现 |
+| 缓存淘汰策略 | M2 之后 | 缓存目录真的涨到影响磁盘时 |
+
+> 这张表是"想法的坟场"：想加功能先写在这里，等真写完了再挪进图。
+
+---
 
 ## 实测
 
@@ -89,7 +167,7 @@ tts/
 │  ├─ engine.py     TTSEngine 协议 + SapiEngine（S2 换引擎的唯一开关）
 │  ├─ player.py     WavPlayer：异步播放 + 10ms 轮询取消
 │  ├─ service.py    队列 + 缓存 + 换代（generation）+ 统计
-│  ├─ sapi.py       S0 的 COM 封装（枚举/朗读/合成）
+│  ├─ sapi.py       COM 封装（枚举 / 朗读 / 合成）
 │  └─ console.py    UTF-8 控制台
 ├─ scripts/         probe_voices / speak_once / to_wav / say / accept_s1
 ├─ tests/           test_splitter.py（9 个）+ test_service.py（4 个）
@@ -106,8 +184,7 @@ tts/
 
 ### 2. 合成线程与播放线程分开
 
-播放第一段的同时，第二段已经在合成。所以句与句之间没有"合成 - 播放 - 合成"的空档，
-连续播报是连续的。
+播放第一段的同时，第二段已经在合成。所以句与句之间没有"合成 - 播放 - 合成"的空档。
 
 ### 3. 打断用"异步播放 + 轮询"，不是"同步播放 + SND_PURGE"
 
@@ -121,7 +198,7 @@ tts/
 原因：`SND_PURGE` 只停**调用线程自己**的发声。所以改成异步播放 + 10ms 轮询取消标志，
 在**同一个线程**里 purge，实测静音延迟 38.8ms。
 
-## 两个踩过的坑（S0）
+## 两个踩过的坑
 
 1. **`Win32 exception occurred releasing IUnknown`**：SAPI 是 COM，`SpVoice` 必须在 `CoUninitialize()` 之前释放。解法：把所有 COM 引用关进 `_collect` / `_speak` / `_synth` 的栈帧。
 2. **中文乱码**：Python 默认 cp936 输出、PowerShell 按 UTF-8 解码。解法：`enable_utf8()`。
@@ -132,9 +209,10 @@ tts/
 | --- | --- | --- |
 | 中文只有 `Huihui Desktop` | 听感机械、无男声 | S2 换 Piper（`zh_CN-huayan`） |
 | SAPI 输出 22.05 kHz | 音质上限低 | S2 |
-| 没有流式合成接口（`synth_chunks`） | 单段最长 50 字，仍要等这一段合成完 | M6 接 CosyVoice 前 |
+| 没有流式合成接口 | 单段最长 50 字，仍要等这一段合成完 | M6 接 CosyVoice 前 |
 | `stop()` 后不保留"已播到哪" | 只能重播整段 | M2 接对话时不重要（一句话级别） |
 
 ## 下一步（S2）
 
 `PiperEngine` 实现 `TTSEngine`，调用方零改动；验"拔网线仍能播"。
+**做完后，§3.3 的六边形下面会多一个实心节点，§3.4 的表会少一行。**

@@ -22,33 +22,10 @@ import numpy as np
 
 from voxdesk_audio import Segmenter, SileroVAD, enable_utf8, read_wav
 from voxdesk_audio.capture import iter_frames
+from voxdesk_audio.corpus import build_composite
 from voxdesk_audio.vad import FRAME_MS
 
 SR = 16000
-
-
-def build_composite(corpus_dir: Path, gap_ms: int) -> tuple[np.ndarray, list[tuple[int, int]]]:
-    """拼成 [静音][句1][间隔][句2]…[静音]，返回音频与每句的真实起止（毫秒）。"""
-    files = sorted(p for p in corpus_dir.glob("*.wav"))
-    if not files:
-        raise SystemExit(f"{corpus_dir} 里没有 wav，先生成语料")
-
-    lead = np.zeros(int(SR * 1.0), dtype=np.float32)
-    gap = np.zeros(int(SR * gap_ms / 1000), dtype=np.float32)
-    tail = np.zeros(int(SR * 0.5), dtype=np.float32)
-
-    chunks = [lead]
-    cursor = len(lead)
-    spans: list[tuple[int, int]] = []
-    for path in files:
-        audio = read_wav(path, SR)
-        spans.append((int(cursor * 1000 / SR), int((cursor + len(audio)) * 1000 / SR)))
-        chunks.append(audio)
-        cursor += len(audio)
-        chunks.append(gap)
-        cursor += len(gap)
-    chunks.append(tail)
-    return np.concatenate(chunks), spans
 
 
 def overlap(a: tuple[int, int], b: tuple[int, int]) -> int:

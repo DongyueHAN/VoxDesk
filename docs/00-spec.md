@@ -3,7 +3,7 @@
 | 字段 | 值 |
 | --- | --- |
 | 文档 | `docs/00-spec.md` |
-| 版本 | v0.2.1 |
+| 版本 | v0.2.2 |
 | 状态 | **待确认**（确认后升为 v1.0 冻结） |
 | 更新 | 2026-11-04 19:30 +08:00 |
 | 生效范围 | 本仓库全部 `docs/` 与 `CHANGELOG.md` |
@@ -38,9 +38,8 @@
 │   ├── 05-roadmap.md          里程碑与任务拆解
 │   ├── 06-reference-landscape.md  参考产品对照
 │   ├── 07-model-layer.md      模型层：选型 / 运行时 / 预算 / 可靠性
-│   ├── 08-oss-shortlist.md    开源选型：STT 与系统调用 harness 候选
+│   ├── 08-oss-shortlist.md    开源调研：选型 + 读哪些 / 怎么读 / 何时停
 │   ├── 09-tts-module.md       TTS 模块（第一个可交付切片）
-│   ├── 10-study-route.md      拆解路线：读哪些仓库、读几遍、何时停
 │   ├── 11-peer-repo-crosscheck.md  同伴仓库核查：不一致清单与边界
 │   └── adr/ADR-XXXX-*.md      架构决策记录（一事一档）
 └── 【研究资料，暂不入库或单独管理】

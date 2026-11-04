@@ -5,8 +5,8 @@
 
 | 项 | 值 |
 | --- | --- |
-| 当前版本 | **v0.12.0（S2 跑通：Piper 上线，service.py 零改动）** |
-| 文档定稿 | 2026-11-05 00:45 +08:00 |
+| 当前版本 | **v0.13.0（08 与 10 合并：一份开源调研）** |
+| 文档定稿 | 2026-11-05 01:00 +08:00 |
 | 当前阶段 | M0.5 · TTS 模块 —— **S2 完成**（Piper 上线），下一步 S3 = M1 端侧前端 |
 | 代码状态 | **跑通 S0+S1+S2**：`D:\VoxDesk\tts` v0.3.0（Piper RTF 0.026 / 首音 56ms / 离线可用） |
 | 关键技术决策 | 本地优先、半双工先行、自研语音管线、委托 harness |
@@ -145,9 +145,8 @@ flowchart TB
 | [docs/05-roadmap.md](docs/05-roadmap.md) | 里程碑拆解 M0–M7 | v0.2.0 |
 | [docs/06-reference-landscape.md](docs/06-reference-landscape.md) | 小爱 / OpenClaw / 竞品 对照 | v0.2.0 |
 | [docs/07-model-layer.md](docs/07-model-layer.md) | **模型层**：选型、运行时、内存预算、工具调用可靠性 | v0.2.0 |
-| [docs/08-oss-shortlist.md](docs/08-oss-shortlist.md) | **开源选型**：STT 与系统调用 harness 候选、许可与活跃度 | v0.4.1 |
+| [docs/08-oss-shortlist.md](docs/08-oss-shortlist.md) | **开源调研**：选型（STT / 系统调用 / TTS）+ 读哪几站、三遍读法、何时停 | v0.5.0 |
 | [docs/09-tts-module.md](docs/09-tts-module.md) | **TTS 模块**：语言、架构、接口、三阶段实施 + CosyVoice 迁移设计 | v0.4.5 |
-| [docs/10-study-route.md](docs/10-study-route.md) | **拆解路线**：9 个仓库的阅读顺序、三遍读法、停止阅读的判据 | v0.5.3 |
 | [docs/11-peer-repo-crosscheck.md](docs/11-peer-repo-crosscheck.md) | **同伴仓库核查**：12 条不一致（A/B/C 三级）+ 边界与接缝 | v0.1.1 |
 | [docs/12-process.md](docs/12-process.md) | **工程进程**：三轴节奏、四个冲刺、闸门、ADR 触发条件 | v0.1.4 |
 | [docs/adr/](docs/adr/) | 架构决策记录（10 份，含 ADR-0010 两仓边界） | — |
@@ -166,6 +165,7 @@ flowchart TB
 
 | 版本 | 时间 | 摘要 |
 | --- | --- | --- |
+| v0.13.0 | 2026-11-05 01:00 +08:00 | 08 与 10 合并为一份开源调研（11 节 + 附录）；10 退休，一个仓库只出现一次 |
 | v0.12.0 | 2026-11-05 00:45 +08:00 | S2 跑通：Piper 上线（RTF 0.026），service.py 零改动；09 新增 CosyVoice 迁移设计 |
 | v0.11.1 | 2026-11-05 00:45 +08:00 | 补入 CosyVoice：五选一变两个引擎，S2 仍用 Piper 当对照组，CosyVoice 归 M6 |
 | v0.11.0 | 2026-11-05 00:18 +08:00 | 新增 TTS 四选一横评：只有 piper1-gpl 是引擎；GPT-SoVITS 是应用、silero 无中文且非商用、unsloth 与 TTS 无关 |

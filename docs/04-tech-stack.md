@@ -138,9 +138,9 @@ vad:
 | **Piper**（现 `OHF-Voice/piper1-gpl`） | ONNX，分句流式 | 首音 **56–169ms**；RTF **0.026** | 中等（`zh_CN-huayan`） | **GPL-3.0**（原 MIT 仓库 2025-08 归档） | ✅ **S2 已上线**（模型 60MB，加载 2.23s）；开源分发需评估 |
 | MeloTTS | PyTorch | 200–400ms | 较好 | MIT | 备选，替换成本低 |
 | Kokoro-82M | ONNX / PyTorch | 150–300ms | 好（中文音色有限） | Apache-2.0 | 备选 |
-| CosyVoice 2/3（0.5B） | 流式 LLM-TTS（全栈引擎） | 150ms 流式（README，GPU）；CPU 上 RTF > 1 | 最好（CER 1.21 / SS 78.0；人类 1.26 / 75.5） | Apache-2.0 | ✅ **M6 音质上限**；9 语种 + 18 方言（`08` §3.3） |
-| GPT-SoVITS | **应用**（WebUI + 克隆） | RTF 0.53（M4 CPU）/ 0.028（4060Ti） | 最好（可克隆） | MIT | ❌ 是应用不是引擎；克隆场景留到 M6 后（`08` §3.3） |
-| Silero TTS | 模型库（`torch.hub`） | 未给数字；CPU 可跑 | ❌ 无中文 | **CC BY-NC 4.0** | ❌ 语种 + 非商用，双重不合格（`08` §3.3） |
+| CosyVoice 2/3（0.5B） | 流式 LLM-TTS（全栈引擎） | 150ms 流式（README，GPU）；CPU 上 RTF > 1 | 最好（CER 1.21 / SS 78.0；人类 1.26 / 75.5） | Apache-2.0 | ✅ **M6 音质上限**；9 语种 + 18 方言（`08` §3.1） |
+| GPT-SoVITS | **应用**（WebUI + 克隆） | RTF 0.53（M4 CPU）/ 0.028（4060Ti） | 最好（可克隆） | MIT | ❌ 是应用不是引擎；克隆场景留到 M6 后（`08` §3.2） |
+| Silero TTS | 模型库（`torch.hub`） | 未给数字；CPU 可跑 | ❌ 无中文 | **CC BY-NC 4.0** | ❌ 语种 + 非商用，双重不合格（`08` §3.2） |
 
 **工程要点**：
 

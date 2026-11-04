@@ -3,9 +3,9 @@
 | 字段 | 值 |
 | --- | --- |
 | 文档 | `docs/08-oss-shortlist.md` |
-| 版本 | v0.5.0 |
+| 版本 | v0.5.1 |
 | 状态 | 草案（仓库层筛选，未做实测） |
-| 更新 | 2026-11-05 01:00 +08:00 |
+| 更新 | 2026-11-05 01:40 +08:00 |
 | 生效范围 | 用哪些开源项目、为什么不用别的、按什么顺序读、何时停 |
 
 > **本文并入原 `10-study-route.md`（v0.5.3，2026-10-29）**：那份文档的「读哪几站 / 三遍读法 / 何时停 / 动手边界 / 节奏」成为本文 §4–§8。
@@ -310,8 +310,8 @@
 
 | 里程碑 | 用到的开源项目 | 怎么用 |
 | --- | --- | --- |
-| M1 端侧音频 | `silero-vad`、`openWakeWord`、`sounddevice`；参考 `RealtimeSTT` 的分段 | 只读代码，不直接依赖 |
-| M2 模型闭环 | **`sherpa-onnx`**（ASR + 降噪）、`piper1-gpl`（TTS）、`ollama` | 直接依赖 |
+| M1 端侧音频 | `silero-vad`、`sounddevice`；参考 `RealtimeSTT` 的分段 | 只读代码，不直接依赖 |
+| M2 模型闭环 | **`sherpa-onnx`**（ASR + 降噪）、`piper1-gpl`（TTS）、`ollama`、`openWakeWord`（KWS，2026-11-05 从 M1 移入） | 直接依赖 |
 | M3 工具执行 | `pywinauto`（窗口/控件）、`pywin32`（进程） | 封装成 `ToolSpec` |
 | M5 接入层 | **`openai/codex`**（CLI 委托）、`markdown` 文件直读 | `HarnessAdapter` 首个实现 |
 | M6 增强 | `Windows-MCP`（MCP 暴露）、`agent-desktop`（无障碍树）、`CosyVoice`（音质） | 可选扩展 |

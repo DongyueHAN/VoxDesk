@@ -5,8 +5,8 @@
 
 | 项 | 值 |
 | --- | --- |
-| 当前版本 | **v0.13.0（08 与 10 合并：一份开源调研）** |
-| 文档定稿 | 2026-11-05 01:00 +08:00 |
+| 当前版本 | **v0.13.1（KWS 挪到 M2，S3 只做端点）** |
+| 文档定稿 | 2026-11-05 01:40 +08:00 |
 | 当前阶段 | M0.5 · TTS 模块 —— **S2 完成**（Piper 上线），下一步 S3 = M1 端侧前端 |
 | 代码状态 | **跑通 S0+S1+S2**：`D:\VoxDesk\tts` v0.3.0（Piper RTF 0.026 / 首音 56ms / 离线可用） |
 | 关键技术决策 | 本地优先、半双工先行、自研语音管线、委托 harness |
@@ -141,8 +141,8 @@ flowchart TB
 | [docs/01-scope.md](docs/01-scope.md) | 范围、场景、非目标、成功标准 | v0.2.0 |
 | [docs/02-requirements.md](docs/02-requirements.md) | 需求池 60 条（REQ-F/N/C）+ 验收标准 | v0.2.0 |
 | [docs/03-architecture.md](docs/03-architecture.md) | 架构：5 层、C4、6 张流程图、状态机、类图 | v0.2.0 |
-| [docs/04-tech-stack.md](docs/04-tech-stack.md) | **技术栈**：语言、框架、端侧四项、接入层 | v0.2.5 |
-| [docs/05-roadmap.md](docs/05-roadmap.md) | 里程碑拆解 M0–M7 | v0.2.0 |
+| [docs/04-tech-stack.md](docs/04-tech-stack.md) | **技术栈**：语言、框架、端侧四项、接入层 | v0.2.6 |
+| [docs/05-roadmap.md](docs/05-roadmap.md) | 里程碑拆解 M0–M7（KWS 归 M2） | v0.2.1 |
 | [docs/06-reference-landscape.md](docs/06-reference-landscape.md) | 小爱 / OpenClaw / 竞品 对照 | v0.2.0 |
 | [docs/07-model-layer.md](docs/07-model-layer.md) | **模型层**：选型、运行时、内存预算、工具调用可靠性 | v0.2.0 |
 | [docs/08-oss-shortlist.md](docs/08-oss-shortlist.md) | **开源调研**：选型（STT / 系统调用 / TTS）+ 读哪几站、三遍读法、何时停 | v0.5.0 |
@@ -165,6 +165,7 @@ flowchart TB
 
 | 版本 | 时间 | 摘要 |
 | --- | --- | --- |
+| v0.13.1 | 2026-11-05 01:40 +08:00 | KWS 从 M1 挪到 M2，与 S3 定义对齐（S3 只做端点 + PTT） |
 | v0.13.0 | 2026-11-05 01:00 +08:00 | 08 与 10 合并为一份开源调研（11 节 + 附录）；10 退休，一个仓库只出现一次 |
 | v0.12.0 | 2026-11-05 00:45 +08:00 | S2 跑通：Piper 上线（RTF 0.026），service.py 零改动；09 新增 CosyVoice 迁移设计 |
 | v0.11.1 | 2026-11-05 00:45 +08:00 | 补入 CosyVoice：五选一变两个引擎，S2 仍用 Piper 当对照组，CosyVoice 归 M6 |

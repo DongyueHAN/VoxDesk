@@ -38,3 +38,7 @@ $size = [math]::Round((Get-ChildItem $dist -Recurse -File | Measure-Object Lengt
 Write-Host ""
 Write-Host "完成：$dist（$size MB）"
 Write-Host "分发：压缩整个 VoxDeskVoice 文件夹；接收方解压后双击 VoxDeskVoice.exe"
+
+Write-Host ""
+Write-Host "首次运行前：把 .env.example 复制成 .env（与 exe 同目录）并填入 DEEPSEEK_API_KEY。"
+Write-Host "直接双击没有 .env 时，窗口会停在'按回车关闭'并提示缺 key，不会再一闪而过。"

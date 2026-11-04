@@ -20,23 +20,31 @@ import numpy as np
 
 from voxdesk_audio import MicStream, PushToTalk, enable_utf8, read_wav
 from voxdesk_demo import __version__, paths
+from voxdesk_demo.loopback import LoopbackStream, list_speakers
 from voxdesk_demo.app import VoiceChat
 from voxdesk_demo.llm import KEY_ENV, DeepSeekChat, DeepSeekError, load_env_file
 
 SR = 16000
 
 
-def record_seconds(seconds: float, device: int | None) -> np.ndarray:
+def open_input(args: argparse.Namespace):
+    """麦克风或系统声音（WASAPI loopback），接口一致。"""
+    if args.source == "loopback":
+        return LoopbackStream(speaker=args.speaker)
+    return MicStream(device=args.device)
+
+
+def record_seconds(seconds: float, args: argparse.Namespace) -> np.ndarray:
     frames: list[np.ndarray] = []
-    with MicStream(device=device) as mic:
+    with open_input(args) as mic:
         frames.extend(mic.frames(limit=int(seconds * 1000 / 32)))
     return np.concatenate(frames) if frames else np.zeros(0, np.float32)
 
 
-def record_while_pressed(ptt: PushToTalk, device: int | None) -> np.ndarray:
-    """按下后开麦、松开停。开麦有 ~50ms 开销，所以第一个字可能被削——demo 够用。"""
+def record_while_pressed(ptt: PushToTalk, args: argparse.Namespace) -> np.ndarray:
+    """按下后开录、松开停。开流有 ~50ms 开销，所以第一个字可能被削——demo 够用。"""
     frames: list[np.ndarray] = []
-    with MicStream(device=device) as mic:
+    with open_input(args) as mic:
         while ptt.pressed:
             frames.extend(mic.frames(limit=1))
     return np.concatenate(frames) if frames else np.zeros(0, np.float32)
@@ -56,7 +64,11 @@ def build_parser() -> argparse.ArgumentParser:
     ap.add_argument("--file", default=None, help="用现成 wav，不录音")
     ap.add_argument("--seconds", type=float, default=None, help="录 N 秒")
     ap.add_argument("--ptt", default="f2", help="按住说话的键（默认 f2）")
-    ap.add_argument("--device", type=int, default=None, help="输入设备编号")
+    ap.add_argument("--device", type=int, default=None, help="麦克风设备编号")
+    ap.add_argument("--source", choices=["mic", "loopback"], default="mic",
+                    help="mic=麦克风；loopback=抓系统正在播放的声音")
+    ap.add_argument("--speaker", default=None, help="loopback 时指定扬声器名（默认系统默认）")
+    ap.add_argument("--list-speakers", action="store_true", help="列出可 loopback 的扬声器")
     ap.add_argument("--mock", action="store_true", help="不调 API，用固定回复")
     ap.add_argument("--key", default=None, help=f"API key（默认读环境变量 {KEY_ENV} 或 .env）")
     ap.add_argument("--model", default=None, help="模型名（默认读 DEEPSEEK_MODEL 或 deepseek-chat）")
@@ -73,11 +85,17 @@ def banner(args: argparse.Namespace, root: Path) -> None:
     print(f"VoxDesk Voice {__version__} · {kind}")
     print(f"模型目录：{root}")
     print(f"模式：{mode}")
+    if args.source == "loopback":
+        print(f"输入：系统声音（loopback）· {args.speaker or '默认扬声器'}")
     print("=" * 62)
 
 
 def run(args: argparse.Namespace) -> int:
     load_env_file()  # 让 banner 的 key 状态反映 .env
+    if args.list_speakers:
+        for name in list_speakers():
+            print(name)
+        return 0
     if args.models:
         root = Path(args.models)
         asr_dir, piper_model = root / paths.ASR_DIR_NAME, root / paths.PIPER_MODEL_NAME
@@ -122,7 +140,7 @@ def run(args: argparse.Namespace) -> int:
 
         if args.seconds:
             print(f"录音 {args.seconds}s…（现在开始说）")
-            report(chat.handle_audio(record_seconds(args.seconds, args.device)))
+            report(chat.handle_audio(record_seconds(args.seconds, args)))
             return 0
 
         print(f"就绪。按住 {args.ptt} 说话，松开即回答；Ctrl+C 退出。\n")
@@ -130,7 +148,7 @@ def run(args: argparse.Namespace) -> int:
             while True:
                 while not ptt.pressed:
                     time.sleep(0.02)
-                audio = record_while_pressed(ptt, args.device)
+                audio = record_while_pressed(ptt, args)
                 if len(audio) < 0.3 * SR:
                     print("（太短，忽略）")
                     continue

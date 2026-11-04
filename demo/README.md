@@ -128,6 +128,40 @@ LLM 总计      867 ms
 
 一次真实运行的记录见 [`DEMO-LOG.md`](DEMO-LOG.md)。参数：`--text` 换话题、`--mock` 不调 API、`--no-tts` 只出文字。
 
+### 听系统声音（不用麦克风）
+
+不启用"立体声混音"也能抓系统播放的声音——用 WASAPI loopback（`soundcard` 库）。
+
+```powershell
+# 先看有哪些扬声器可抓
+python scripts/voice_chat.py --list-speakers
+
+# 抓系统声音 4 秒（期间让别的程序放音频）
+python scripts/voice_chat.py --source loopback --seconds 4
+
+# 指定扬声器（多个输出设备时）
+python scripts/voice_chat.py --source loopback --speaker "扬声器 (2- Realtek(R) Audio)" --seconds 4
+```
+
+实测（放一段中文语料让程序抓）：
+
+```
+你说：第五句带感叹
+耗时：ASR 327ms  TTS 3179ms  |  合计 3506ms
+```
+
+**为什么不用"立体声混音"**：这台机器的 Realtek(SST) 驱动只在 WDM-KS 层暴露它，
+PortAudio 打开时报 `Invalid device`（试过 6 种采样率/声道组合）。`soundcard` 走 WASAPI loopback，
+不需要任何虚拟声卡或驱动设置。
+
+三个坑：
+
+| 坑 | 说明 |
+| --- | --- |
+| **自激** | 它播报的声音会被自己录进去，形成回环。演示时用 `--no-tts`，或把输出切到耳机 |
+| **模型加载 3 秒** | 加载完才开始录；提前算好别让音频播完了 |
+| **尾字被切** | 录音窗口结束得早会丢最后一个字（上面的"感叹"就丢了"号！"）；多录 1 秒 |
+
 ### 打包成免安装应用
 
 ```powershell

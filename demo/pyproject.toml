@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "临时 demo：语音 → ASR → DeepSeek API → TTS（云 LLM，分支专用）"
 requires-python = "==3.11.*"
 dependencies = [
+    "soundcard>=0.4.6",
     "voxdesk-audio",
     "voxdesk-tts",
 ]

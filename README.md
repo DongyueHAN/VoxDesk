@@ -21,7 +21,7 @@
 ## 立刻试用
 
 ```powershell
-git clone https://github.com/<you>/VoxDesk.git
+git clone https://github.com/DongyueHAN/VoxDesk.git
 cd VoxDesk\demo
 
 uv sync                                         # 装依赖（自动装 Python 3.11）

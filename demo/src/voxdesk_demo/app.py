@@ -85,12 +85,7 @@ class VoiceChat:
 
         reply, first_token_ms, llm_ms = self._ask(user_text)
 
-        tts_ms: float | None = None
-        if reply:
-            t0 = time.perf_counter()
-            self.tts.speak(reply)
-            self.tts.wait(timeout=120)
-            tts_ms = (time.perf_counter() - t0) * 1000
+        tts_ms = self._speak(reply) if reply else None
 
         return Turn(
             user_text=user_text,
@@ -101,7 +96,28 @@ class VoiceChat:
             tts_ms=tts_ms,
         )
 
+    def handle_text(self, text: str, speak: bool = True) -> Turn:
+        """跳过 ASR：把一段文本直接当成"用户说的话"（演示/联调用）。"""
+        user_text = text.strip()
+        if not user_text:
+            return Turn("", "", 0.0, None, None, None)
+        reply, first_token_ms, llm_ms = self._ask(user_text)
+        return Turn(
+            user_text=user_text,
+            reply_text=reply,
+            asr_ms=0.0,
+            first_token_ms=first_token_ms,
+            llm_ms=llm_ms,
+            tts_ms=self._speak(reply) if (reply and speak) else None,
+        )
+
     # ------------------------------------------------------------------ 内部
+
+    def _speak(self, reply: str) -> float:
+        start = time.perf_counter()
+        self.tts.speak(reply)
+        self.tts.wait(timeout=120)
+        return (time.perf_counter() - start) * 1000
 
     def _ask(self, text: str) -> tuple[str, float | None, float | None]:
         if self.mock:

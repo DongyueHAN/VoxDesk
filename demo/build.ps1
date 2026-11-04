@@ -19,6 +19,7 @@ uv run pyinstaller --noconfirm --clean --onedir --name VoxDeskVoice `
     --collect-all onnxruntime `
     --collect-all piper `
     --collect-all sounddevice `
+    --collect-all soundcard `
     --collect-submodules win32com `
     --hidden-import pythoncom `
     --hidden-import pywintypes `

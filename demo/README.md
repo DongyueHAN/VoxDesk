@@ -23,8 +23,11 @@ uv sync
 # 0) 先不花钱验证链路（固定回复，不调 API）
 uv run python scripts/voice_chat.py --file ..\audio\out\corpus\01.wav --mock
 
-# 1) 设 key（只读环境变量，不写进仓库）
+# 1) 设 key：二选一
+#    A. 临时（只活当前窗口）
 $env:DEEPSEEK_API_KEY = "sk-..."
+#    B. 写进 demo/.env（推荐，见下节）
+Copy-Item .env.example .env    # 然后把 .env 里的 DEEPSEEK_API_KEY= 填上
 
 # 2) 固定录 4 秒
 uv run python scripts/voice_chat.py --seconds 4
@@ -32,6 +35,27 @@ uv run python scripts/voice_chat.py --seconds 4
 # 3) 按住 f2 说话，松开即回答（默认）
 uv run python scripts/voice_chat.py
 ```
+
+## 密钥放哪（`.env`）
+
+```
+demo/
+├─ .env.example   ← 模板，会被提交，别往里写真 key
+└─ .env           ← 你的真 key，已被根 .gitignore 忽略
+```
+
+读取优先级：**显式传参 > 进程环境变量 > `.env`**（`.env` 不覆盖已有变量）。
+查找顺序：当前目录 → `demo/` → 仓库根。
+
+`.env` 支持三个键：
+
+| 键 | 必填 | 默认 |
+| --- | --- | --- |
+| `DEEPSEEK_API_KEY` | ✅ | 无 |
+| `DEEPSEEK_MODEL` | — | `deepseek-chat` |
+| `DEEPSEEK_BASE_URL` | — | `https://api.deepseek.com` |
+
+已验证：`.env` 为空 → 报"没有 API key"；填假 key → **真打到 API 并返回 401**（说明读取与请求链路都通）。
 
 ## 实测（本机，mock 模式）
 

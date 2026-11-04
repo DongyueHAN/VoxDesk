@@ -4,6 +4,13 @@
 少一个依赖，就少一个"换台电脑装不上"的可能。
 
 流式的目的不是炫技，是**量首 token 延迟**——那是 S5 的硬指标（≤1.2s）。
+
+配置来源（优先级从高到低）：
+    1. 显式传参（`--key` / 构造参数）
+    2. 进程环境变量（`$env:DEEPSEEK_API_KEY = "..."`，只活当前窗口）
+    3. `.env` 文件（当前目录 → demo/ → 仓库根，**不覆盖已存在的变量**）
+
+`.env` 已在根 `.gitignore` 里（`.env` + `.env.*`），不会被提交。
 """
 
 from __future__ import annotations
@@ -14,10 +21,13 @@ import time
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
+from pathlib import Path
 
 DEFAULT_BASE_URL = "https://api.deepseek.com"
 DEFAULT_MODEL = "deepseek-chat"
 KEY_ENV = "DEEPSEEK_API_KEY"
+MODEL_ENV = "DEEPSEEK_MODEL"
+BASE_URL_ENV = "DEEPSEEK_BASE_URL"
 
 
 class DeepSeekError(RuntimeError):
@@ -36,20 +46,60 @@ class ChatReply:
         return len(self.text) / (self.total_ms / 1000) if self.total_ms else float("nan")
 
 
+def env_file_candidates() -> list[Path]:
+    """按优先级列出可能存在的 .env。"""
+    here = Path(__file__).resolve()
+    return [
+        Path.cwd() / ".env",  # 你在哪个目录启动，就先看那里
+        here.parents[2] / ".env",  # demo/.env
+        here.parents[3] / ".env",  # 仓库根/.env
+    ]
+
+
+def load_env_file(paths: list[Path] | None = None) -> list[str]:
+    """把 .env 里的 KEY=VALUE 读进 os.environ（**已有变量不覆盖**）。
+
+    返回真正被设置的变量名，方便调试时确认"到底从哪读到的"。
+    """
+    loaded: list[str] = []
+    for path in paths if paths is not None else env_file_candidates():
+        try:
+            text = path.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        for raw in text.splitlines():
+            line = raw.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, _, value = line.partition("=")
+            key = key.strip()
+            value = value.strip().strip('"').strip("'")
+            if key and key not in os.environ:
+                os.environ[key] = value
+                loaded.append(key)
+    return loaded
+
+
 class DeepSeekChat:
     def __init__(
         self,
         api_key: str | None = None,
-        model: str = DEFAULT_MODEL,
-        base_url: str = DEFAULT_BASE_URL,
+        model: str | None = None,
+        base_url: str | None = None,
         timeout: float = 60.0,
     ) -> None:
+        load_env_file()
+
         key = api_key or os.environ.get(KEY_ENV, "")
         if not key:
-            raise DeepSeekError(f"没有 API key：设置环境变量 {KEY_ENV}，或传 --key")
+            raise DeepSeekError(
+                f"没有 API key：设置环境变量 {KEY_ENV}、传 --key，"
+                f"或复制 demo/.env.example 为 demo/.env 后填入"
+            )
+
         self.api_key = key
-        self.model = model
-        self.base_url = base_url.rstrip("/")
+        self.model = model or os.environ.get(MODEL_ENV) or DEFAULT_MODEL
+        self.base_url = (base_url or os.environ.get(BASE_URL_ENV) or DEFAULT_BASE_URL).rstrip("/")
         self.timeout = timeout
 
     # ------------------------------------------------------------------ 公开

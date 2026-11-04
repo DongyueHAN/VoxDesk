@@ -30,6 +30,11 @@ Thumbs.db
 desktop.ini
 ~$*
 
+# ---- 密钥与本地配置（.env 永不入库，模板 .env.example 例外）----
+.env
+.env.*
+!.env.example
+
 # ---- demo（分支专用）----
 demo/cache/
 demo/out/

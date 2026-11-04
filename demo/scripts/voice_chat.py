@@ -64,8 +64,8 @@ def main() -> int:
     ap.add_argument("--ptt", default="f2", help="按住说话的键（默认 f2）")
     ap.add_argument("--device", type=int, default=None, help="输入设备编号")
     ap.add_argument("--mock", action="store_true", help="不调 API，用固定回复")
-    ap.add_argument("--key", default=None, help=f"API key（默认读环境变量 {KEY_ENV}）")
-    ap.add_argument("--model", default="deepseek-chat")
+    ap.add_argument("--key", default=None, help=f"API key（默认读环境变量 {KEY_ENV} 或 .env）")
+    ap.add_argument("--model", default=None, help="模型名（默认读 DEEPSEEK_MODEL 或 deepseek-chat）")
     ap.add_argument("--system", default=None, help="覆盖 system prompt")
     args = ap.parse_args()
 

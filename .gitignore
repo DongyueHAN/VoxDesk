@@ -10,6 +10,8 @@ __pycache__/
 # ---- 合成产物（本地验证用，不入库）----
 tts/out/
 tts/cache/
+demo/cache/
+demo/out/
 *.wav
 *.mp3
 
@@ -19,9 +21,18 @@ models/
 *.onnx.json
 *.tar.bz2
 
+# ---- 构建产物（PyInstaller 的 build/dist 不入库；.spec 保留，用来复现构建）----
+build/
+dist/
+
 # ---- Obsidian（把本仓当 vault 打开时自动生成）----
 .obsidian/
 .trash/
+
+# ---- 密钥与本地配置（.env 永不入库，模板 .env.example 例外）----
+.env
+.env.*
+!.env.example
 
 # ---- 编辑器 / 系统 ----
 .vscode/
@@ -29,12 +40,3 @@ models/
 Thumbs.db
 desktop.ini
 ~$*
-
-# ---- 密钥与本地配置（.env 永不入库，模板 .env.example 例外）----
-.env
-.env.*
-!.env.example
-
-# ---- demo（分支专用）----
-demo/cache/
-demo/out/

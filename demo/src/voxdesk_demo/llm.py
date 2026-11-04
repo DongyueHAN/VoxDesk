@@ -47,13 +47,10 @@ class ChatReply:
 
 
 def env_file_candidates() -> list[Path]:
-    """按优先级列出可能存在的 .env。"""
-    here = Path(__file__).resolve()
-    return [
-        Path.cwd() / ".env",  # 你在哪个目录启动，就先看那里
-        here.parents[2] / ".env",  # demo/.env
-        here.parents[3] / ".env",  # 仓库根/.env
-    ]
+    """按优先级列出可能存在的 .env（源码运行与打包后都由 paths 决定）。"""
+    from . import paths
+
+    return paths.env_files()
 
 
 def load_env_file(paths: list[Path] | None = None) -> list[str]:

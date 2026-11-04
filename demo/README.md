@@ -57,12 +57,54 @@ demo/
 
 已验证：`.env` 为空 → 报"没有 API key"；填假 key → **真打到 API 并返回 401**（说明读取与请求链路都通）。
 
+## 打包成可分发应用
+
+```powershell
+cd D:\VoxDesk\demo
+.\build.ps1
+```
+
+产物 `dist\VoxDeskVoice\`（**463 MB**，含模型）：
+
+```
+VoxDeskVoice\
+├─ VoxDeskVoice.exe      # 双击运行（控制台窗口）
+├─ models\               # ASR 226MB + Piper 60MB + VAD 2.3MB
+├─ .env.example          # 拷成 .env 填 key
+└─ _internal\            # Python 运行时与依赖（PyInstaller 生成）
+```
+
+分发三步：**压缩整个文件夹** → 对方解压 → 把 `.env.example` 复制成 `.env` 填 key，双击 exe。
+
+已验证：
+
+| 场景 | 结果 |
+| --- | --- |
+| 缺模型 | 报错并打印"模型应放在：<路径>" |
+| exe 旁边的 `.env` | 能读到（假 key → `HTTP 401 ... ****dist`） |
+| `--models` 覆盖 | 生效（指向不存在的目录会给出同一条提示） |
+| 不联网 | `--mock` 仍可跑完整链路 |
+
+> `.env` 与 `build/`、`dist/` 都在 `.gitignore` 里；`.spec` 保留，用来复现构建。
+
+## 实测（真 API，本机）
+
+| 环节 | 数值 |
+| --- | --- |
+| ASR | 218ms |
+| **首 token** | **681ms** |
+| LLM 总耗时 | 823ms |
+| TTS 播放 | 5389ms（这是音频时长，合成 RTF 0.026） |
+| 合计 | 6429ms |
+
+结论：**链路本身很快（<1.1s 到首 token），总时长被"把话说完"占掉**。
+
 ## 实测（本机，mock 模式）
 
 | 环节 | 数值 | 说明 |
 | --- | --- | --- |
-| ASR | 869ms（首次，含模型加载）/ 约 330ms（后续） | 5.13s 音频 |
-| TTS | 7530ms | 这是**播放时长**，不是合成耗时（合成 RTF 0.026） |
+| ASR | 约 220–330ms | 5.13s 音频；首次含模型加载 |
+| TTS | 约 5–7s | 这是**播放时长**，不是合成耗时（合成 RTF 0.026） |
 | API 可达性 | `HTTP 401`（假 key） | 域名通、鉴权生效；真 key 待你配 |
 
 > 真调 API 的数字（首 token / 总耗时）要等你配 key 后跑一次才知道——脚本会打印 `首token XXms`。

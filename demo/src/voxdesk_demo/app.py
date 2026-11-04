@@ -14,18 +14,12 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass
-from pathlib import Path
-
 import numpy as np
 
 from voxdesk_audio import StreamingASR
 from voxdesk_tts import PiperEngine, TTSService
 
-# 三个切片各有自己的 models/ 目录，这里统一从仓库根找，
-# 这样在任何 cwd 下运行都能找到模型（demo 从 demo/ 启动时尤其重要）
-REPO_ROOT = Path(__file__).resolve().parents[3]
-DEFAULT_ASR_DIR = REPO_ROOT / "audio" / "models" / "sherpa-onnx-streaming-paraformer-bilingual-zh-en"
-DEFAULT_PIPER_MODEL = REPO_ROOT / "tts" / "models" / "zh_CN-huayan-medium.onnx"
+from . import paths
 
 SYSTEM_PROMPT = (
     "你是一个简洁的中文语音助手。回答控制在两句话以内，"
@@ -69,8 +63,8 @@ class VoiceChat:
         model_dir=None,
         asr_model_dir=None,
     ) -> None:
-        self.asr = asr or StreamingASR(asr_model_dir or DEFAULT_ASR_DIR)
-        piper_model = model_dir or DEFAULT_PIPER_MODEL
+        self.asr = asr or StreamingASR(asr_model_dir or paths.default_asr_dir())
+        piper_model = model_dir or paths.default_piper_model()
         engine = PiperEngine(piper_model, warmup=True)
         self.tts = tts or TTSService(engine, cache_dir=cache_dir)
         self.llm = llm

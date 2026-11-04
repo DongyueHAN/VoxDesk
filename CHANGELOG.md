@@ -5,6 +5,45 @@
 
 ---
 
+## [v0.9.1] · 2026-11-04 18:40 +08:00 · S0 跑通：能出声了
+
+**类型**：工程推进（PATCH）
+**范围**：新建代码仓 `D:\VoxDesk\tts`；改 `docs/09` §1.2、`docs/12` §3、`README.md`
+**触发**：需求方要求开工 S0，并指定代码落在 `D:\VoxDesk\tts`
+**原则**：文档仓不写实现代码（`REQ-C-001`），所以代码另开一个 git 仓库
+
+### 实测
+
+| 项 | 结果 |
+| --- | --- |
+| 解释器 | Python 3.11.17（`uv python install 3.11`，落在 `D:\uv-python\`） |
+| 依赖 | `pywin32==312`，`uv sync` 约 1 分钟 |
+| 音色 | **3 个**：Huihui Desktop（zh-CN）、Zira、David（en-US） |
+| 合成 | 22.05 kHz / 16 bit / 单声道，5.798 s 音频，258 KB |
+| 速度 | 合成耗时 0.05 s，**实时因子 0.009** |
+| 非静音校验 | RMS 1838 / 峰值 18346 |
+| 播报 | 同步 `Speak()` 用时 4.95 s ≈ 音频时长，确认走完了声卡 |
+
+### 变更
+
+| ID | 变更 | 文件 |
+| --- | --- | --- |
+| CHG-0058 | 新建代码仓 `D:\VoxDesk`（首个 commit `391a043`）：`tts/` 下 pywin32 + 3 个脚本 | 新仓 |
+| CHG-0059 | 修正 §1.2：Python 侧**中文只有 `Huihui Desktop`**；Kangkang / Yaoyao 注册在 `Speech_OneCore`，64 位 SAPI 5 的 `SpVoice` 看不见（10-28 记的"三个中文音色"只对 PowerShell `System.Speech` 成立） | `09` §1.2 |
+| CHG-0060 | S0 标记完成，补产物、实测数字与副产物 | `12` §3 |
+| CHG-0061 | 门面状态由"待开工"改为"已跑通"，并指向代码仓 | `README.md` |
+
+### 两个坑（已写进代码注释）
+
+1. **`Win32 exception occurred releasing IUnknown`**：SAPI 是 COM，`SpVoice` 必须在 `CoUninitialize()` 之前释放。解法：把所有 COM 引用关进 `_collect` / `_speak` / `_synth` 的栈帧，函数返回即销毁。
+2. **中文乱码**：Python 默认 cp936 输出、PowerShell 按 UTF-8 解码。解法：`enable_utf8()`。
+
+### 下一步
+
+S1：分句 + 缓存 + 队列 + `stop()`，验收按 `09` §8 六条。
+
+---
+
 ## [v0.9.0] · 2026-10-29 15:39 +08:00 · 工程进程：三轴、冲刺与闸门
 
 **类型**：新增文档（MINOR）

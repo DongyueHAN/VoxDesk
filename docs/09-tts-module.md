@@ -3,9 +3,9 @@
 | 字段 | 值 |
 | --- | --- |
 | 文档 | `docs/09-tts-module.md` |
-| 版本 | v0.4.1 |
+| 版本 | v0.4.2 |
 | 状态 | 草案 |
-| 更新 | 2026-10-29 15:10 +08:00 |
+| 更新 | 2026-11-04 18:35 +08:00 |
 | 生效范围 | 文字转语音模块的语言、分层、接口与实施步骤 |
 
 > 面向"第一次做工程"的读者：每一步都能验证，不要求先懂架构再动手。
@@ -36,16 +36,20 @@
 | 备选引擎 | **sherpa-onnx TTS**（Apache-2.0） | 不新增依赖（ASR 已用它）；中文质量略低于 Piper |
 | 音质上限 | **CosyVoice**（Apache-2.0） | 中文最佳，但 0.5B + 流式接口，留到 M6 |
 
-### 1.2 你的机器现状（2026-10-28 实测）
+### 1.2 你的机器现状（2026-11-04 实测，替换 10-28 快照）
 
 | 项 | 状态 |
 | --- | --- |
-| `uv` | ✅ 0.13.5 已安装 |
-| `python` | ❌ 未安装（命令无输出） |
-| 中文语音 | ✅ Huihui、Kangkang、Yaoyao（zh-CN） |
+| `uv` | ✅ 0.13.5 |
+| `python` | ✅ 3.11.17（`uv python install 3.11`，装在 `D:\uv-python\cpython-3.11-windows-x86_64-none`） |
+| SAPI 5 音色 | ✅ 3 个：`Microsoft Huihui Desktop`（zh-CN）、`Zira`、`David`（en-US） |
+| OneCore 音色 | ⚠️ 另有 6 个（含 Kangkang、Yaoyao、Huihui）注册在 `Speech_OneCore`，**64 位 SAPI 5 的 `SpVoice` 看不见** |
 | 音频输出 | ✅ Realtek + USB Audio Device |
+| 合成性能 | ✅ 22.05 kHz / 16 bit / 单声道；5.8 s 音频合成耗时 0.05 s（实时因子 0.009） |
 
-**结论**：用 `uv python install 3.11` 装解释器，SAPI 直接出声，今天不需要任何模型文件。
+**修正 10-28 的记录**：当时写的"Huihui、Kangkang、Yaoyao 可用"只对 PowerShell 的 `System.Speech` 成立（它把 OneCore 音色也列出来了），**Python 侧只能拿到 `Huihui Desktop` 一个中文音色**。想要男声或更多中文音色，要么另装 SAPI 5 语音包，要么等 S2 的 Piper（`zh_CN-huayan`）。
+
+**结论**：解释器与音色已就位，S0 不需要任何模型文件。
 
 ## 2. 三阶段路线
 

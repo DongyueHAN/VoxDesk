@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import os
 import sys
 import time
@@ -27,9 +28,10 @@ from voxdesk_demo.llm import KEY_ENV, DeepSeekChat, DeepSeekError, load_env_file
 SR = 16000
 
 
-def open_input(args: argparse.Namespace):
+def open_input(args: argparse.Namespace, source: str | None = None):
     """麦克风或系统声音（WASAPI loopback），接口一致。"""
-    if args.source == "loopback":
+    kind = source or args.source
+    if kind == "loopback":
         return LoopbackStream(speaker=args.speaker)
     return MicStream(device=args.device)
 
@@ -41,10 +43,10 @@ def record_seconds(seconds: float, args: argparse.Namespace) -> np.ndarray:
     return np.concatenate(frames) if frames else np.zeros(0, np.float32)
 
 
-def record_while_pressed(ptt: PushToTalk, args: argparse.Namespace) -> np.ndarray:
-    """按下后开录、松开停。开流有 ~50ms 开销，所以第一个字可能被削——demo 够用。"""
+def record_while_held(ptt: PushToTalk, args: argparse.Namespace, source: str) -> np.ndarray:
+    """按住哪个键就用哪个源录：F2=麦克风，F3=系统声音。"""
     frames: list[np.ndarray] = []
-    with open_input(args) as mic:
+    with open_input(args, source) as mic:
         while ptt.pressed:
             frames.extend(mic.frames(limit=1))
     return np.concatenate(frames) if frames else np.zeros(0, np.float32)
@@ -65,6 +67,8 @@ def build_parser() -> argparse.ArgumentParser:
     ap.add_argument("--seconds", type=float, default=None, help="录 N 秒")
     ap.add_argument("--ptt", default="f2", help="按住说话的键（默认 f2）")
     ap.add_argument("--device", type=int, default=None, help="麦克风设备编号")
+    ap.add_argument("--loopback-key", default="f3",
+                    help="按住它录系统声音（默认 f3；传空字符串关闭）")
     ap.add_argument("--source", choices=["mic", "loopback"], default="mic",
                     help="mic=麦克风；loopback=抓系统正在播放的声音")
     ap.add_argument("--speaker", default=None, help="loopback 时指定扬声器名（默认系统默认）")
@@ -87,6 +91,8 @@ def banner(args: argparse.Namespace, root: Path) -> None:
     print(f"模式：{mode}")
     if args.source == "loopback":
         print(f"输入：系统声音（loopback）· {args.speaker or '默认扬声器'}")
+    elif args.loopback_key:
+        print(f"热键：{args.ptt} = 麦克风 · {args.loopback_key} = 系统声音")
     print("=" * 62)
 
 
@@ -143,12 +149,21 @@ def run(args: argparse.Namespace) -> int:
             report(chat.handle_audio(record_seconds(args.seconds, args)))
             return 0
 
-        print(f"就绪。按住 {args.ptt} 说话，松开即回答；Ctrl+C 退出。\n")
-        with PushToTalk(args.ptt) as ptt:
+        lb_key = args.loopback_key or ""
+        hint = f"{args.ptt} = 麦克风" + (f" · {lb_key} = 系统声音" if lb_key else "")
+        print(f"就绪。按住 {hint}，松开即回答；Ctrl+C 退出。\n")
+        with contextlib.ExitStack() as stack:
+            mic_ptt = stack.enter_context(PushToTalk(args.ptt))
+            lb_ptt = stack.enter_context(PushToTalk(lb_key)) if lb_key else None
             while True:
-                while not ptt.pressed:
+                while not (mic_ptt.pressed or (lb_ptt and lb_ptt.pressed)):
                     time.sleep(0.02)
-                audio = record_while_pressed(ptt, args)
+                if mic_ptt.pressed or lb_ptt is None:
+                    ptt, source = mic_ptt, "mic"
+                else:
+                    ptt, source = lb_ptt, "loopback"
+                print(f"[{('麦克风' if source == 'mic' else '系统声音')}] 录音中…", flush=True)
+                audio = record_while_held(ptt, args, source)
                 if len(audio) < 0.3 * SR:
                     print("（太短，忽略）")
                     continue

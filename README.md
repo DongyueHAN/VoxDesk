@@ -2,7 +2,7 @@
 
 > 按住一个键说句话，它**听懂、回答、念出来**。全流程跑在自己的 Windows 电脑上，不依赖任何语音云服务。
 >
-> **实测：ASR 218ms · 首 token 681ms · 到首字 ≈1.05s · 打包后 463MB（模型内置）**
+> **实测：ASR 218ms · 首 token 681ms · 到首字 ≈1.05s · 打包后 464MB（模型内置）**
 
 `Windows 10/11 x64` · `Python 3.11` · `ONNX Runtime` · `CPU 即可，不需要独显` · `GPL-3.0`
 
@@ -14,7 +14,7 @@
 
 - **语音不出本机**——识别（ASR）与播报（TTS）都在本地跑，模型是 226MB + 60MB 的 ONNX 文件
 - **按一下就能用**——`F2` 按下说话、松开出结果，不挑窗口焦点，不装驱动
-- **能打包发人**——`build.ps1` 生成 463MB 的免安装目录，双击 exe 就能跑
+- **能打包发人**——`build.ps1` 生成 464MB 的免安装目录，双击 exe 就能跑
 
 当前分支接的是 **DeepSeek API**（只把**文本**发出去，音频不出本机）；主线版本接本地 Ollama，可完全离线。差异见下表。
 
@@ -45,7 +45,7 @@ uv run python scripts/voice_chat.py --file ..\audio\out\corpus\01.wav --mock
 | 打断 | `stop()` 后 **12–39ms** 真静音 |
 | 断句（VAD） | Silero VAD，50 句验收 **切错 0 条**，起点误差 64ms |
 | 降噪 | 谱减 + bypass 开关；0 dB 白噪下端点错误 **1 → 0** |
-| 免安装分发 | PyInstaller 打包 **463MB**，模型内置，双击即用 |
+| 免安装分发 | PyInstaller 打包 **464MB**，模型内置，双击即用 |
 
 ## 它是怎么搭的
 
@@ -64,7 +64,7 @@ flowchart LR
 | --- | --- | --- |
 | `audio/` | 采集、VAD 端点、降噪、PTT、流式 ASR | 50 句切错 0；首字 218ms |
 | `tts/` | Piper 播报、分句、缓存、打断、引擎可替换 | 首音 56ms；打断 12ms |
-| `demo/` | 把两者拼成一轮对话，LLM 适配 + 打包 | 到首字 ≈1.05s；exe 463MB |
+| `demo/` | 把两者拼成一轮对话，LLM 适配 + 打包 | 到首字 ≈1.05s；exe 464MB |
 
 每个目录都有自己的 README，写清了踩过的坑与实测数据：
 
@@ -80,7 +80,7 @@ flowchart LR
 | Python | 3.11（`uv` 自动安装） |
 | 硬件 | 有麦克风即可，CPU 跑得动 |
 | 网络 | 只有调 API 时需要；`--mock` 完全离线 |
-| 磁盘 | 源码 + 模型约 400MB；打包产物 463MB |
+| 磁盘 | 源码 + 模型约 400MB；打包产物 464MB |
 
 ## 打包成免安装应用
 
@@ -89,7 +89,7 @@ cd demo
 .\build.ps1
 ```
 
-产物 `demo\dist\VoxDeskVoice\`：双击 `VoxDeskVoice.exe`；分发给别人时压缩整个文件夹，对方填好 `.env` 即可。
+产物 `D:\VoxDesk\VoxDeskVoice\`（与 `demo\` 同级）：双击 `VoxDeskVoice.exe`；分发给别人时压缩整个文件夹（不含 `.env`），对方填好 `.env` 即可。
 
 ## 这个分支与主线的差异
 

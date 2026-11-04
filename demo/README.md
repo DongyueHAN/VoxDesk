@@ -15,7 +15,7 @@
 
 | 能力 | 说明 |
 | --- | --- |
-| **按住说话** | `F2` 按下录音、松开即出结果；不需要点按钮、不挑窗口焦点 |
+| **按住说话** | `F2` = 麦克风，`F3` = 系统声音（WASAPI loopback）；松开即出结果，不挑窗口焦点 |
 | **中文语音识别** | sherpa-onnx 流式 Paraformer，首字约 0.2–0.3s，标点自动补 |
 | **对话** | DeepSeek Chat，SSE 流式；回答长度被 system prompt 约束为"两句话内、不带 Markdown" |
 | **语音播报** | Piper 本地合成（RTF 0.026）+ 缓存；同一句第二次直接命中 |
@@ -102,7 +102,8 @@ notepad .env          # 填 DEEPSEEK_API_KEY=
 | `--mock` | 不调 API，用固定回复 |
 | `--key` / `--model` | 覆盖 key / 模型名 |
 | `--system` | 覆盖 system prompt（默认要求"两句话内、不带 Markdown"） |
-| `--ptt f3` | 换一个按住说话的键 |
+| `--ptt f3` | 换麦克风的按住键 |
+| `--loopback-key f4` | 换"系统声音"的按住键（默认 `f3`；传空串关闭） |
 | `--device 2` | 指定输入设备（编号见 `audio/scripts/list_devices.py`） |
 | `--models D:\models` | 覆盖模型目录 |
 
@@ -168,18 +169,19 @@ PortAudio 打开时报 `Invalid device`（试过 6 种采样率/声道组合）�
 .\build.ps1
 ```
 
-产物 `dist\VoxDeskVoice\`（约 463MB）：
+产物 `D:\VoxDesk\VoxDeskVoice\`（与 `demo\` **同级**，约 464MB）：
 
 ```
-VoxDeskVoice\
+D:\VoxDesk\VoxDeskVoice\
 ├─ VoxDeskVoice.exe      ← 双击运行（控制台窗口）
 ├─ models\               ← ASR 226MB + Piper 60MB + VAD 2.3MB
-├─ .env.example          ← 拷成 .env 填 key
+├─ .env                  ← 构建时从 demo/.env 自动复制（分发前删掉）
+├─ .env.example          ← 模板
 └─ _internal\            ← Python 运行时与依赖
 ```
 
-分发：**压缩整个文件夹** → 对方解压 → 复制 `.env.example` 为 `.env` 填 key → 双击 exe。
-发人之前记得删掉 `dist\VoxDeskVoice\.env`（如果你在里面填过真 key）。
+分发：**压缩整个文件夹（不含 `.env`）** → 对方解压 → 复制 `.env.example` 为 `.env` 填 key → 双击 exe。
+发人之前记得删掉 `D:\VoxDesk\VoxDeskVoice\.env`（构建时会自动从 `demo\.env` 复制，含真 key）。
 
 ### 常见问题
 

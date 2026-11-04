@@ -22,6 +22,7 @@ models/
 *.tar.bz2
 
 # ---- 构建产物（PyInstaller 的 build/dist 不入库；.spec 保留，用来复现构建）----
+/VoxDeskVoice/
 build/
 dist/
 

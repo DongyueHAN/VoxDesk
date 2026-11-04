@@ -4,7 +4,7 @@
 >
 > **实测：ASR 218ms · 首 token 681ms · 到首字 ≈1.05s · 打包后 463MB（模型内置）**
 
-`Windows 10/11 x64` · `Python 3.11` · `ONNX Runtime` · `CPU 即可，不需要独显`
+`Windows 10/11 x64` · `Python 3.11` · `ONNX Runtime` · `CPU 即可，不需要独显` · `GPL-3.0`
 
 ---
 
@@ -107,6 +107,66 @@ cd demo
 - **近期**：常开麦 + VAD 自动断句（免按键）、流式播报（首段合成完就播）、`Esc` 打断
 - **中期**：本地/云端一键切换、多轮记忆、工具调用（开程序 / 查天气）、托盘常驻
 - **不做**：全双工与回声消除（独立量级）、自研模型、重写 GUI
+
+## 致谢 / Acknowledgements
+
+这个项目站在一堆开源工作的肩膀上。**没有它们的许可与文档，这条链路跑不起来**：
+
+| 组件 | 在本项目里干什么 | 许可 |
+| --- | --- | --- |
+| [OHF-Voice/piper1-gpl](https://github.com/OHF-Voice/piper1-gpl) | TTS 引擎（文本 → 22.05kHz WAV） | **GPL-3.0** |
+| [k2-fsa/sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) | 流式 ASR 运行时（Paraformer 推理） | Apache-2.0 |
+| [snakers4/silero-vad](https://github.com/snakers4/silero-vad) | 端点检测（VAD） | MIT |
+| [microsoft/onnxruntime](https://github.com/microsoft/onnxruntime) | ONNX 推理后端 | MIT |
+| [PortAudio](https://www.portaudio.com/) / [sounddevice](https://github.com/spatialaudio/python-sounddevice) | 音频采集与播放 | MIT |
+| [numpy](https://numpy.org/) | 帧处理与重采样 | BSD-3-Clause |
+| [keyboard](https://github.com/boppreh/keyboard) | 全局热键（按住说话） | MIT |
+| [pywin32](https://github.com/mhammond/pywin32) | Windows COM（SAPI 兜底引擎） | PSF-2.0 |
+| [PyInstaller](https://pyinstaller.org/) | 打包成免安装 exe | GPL-2.0 + bootloader exception |
+
+**模型权重**（不随仓库分发，`.gitignore` 已忽略）：
+
+| 模型 | 来源 | 许可说明 |
+| --- | --- | --- |
+| `sherpa-onnx-streaming-paraformer-bilingual-zh-en` | k2-fsa 发布的 ONNX 转换版，源自 ModelScope `damo/speech_paraformer_asr_nat-zh-cn-…-online` | 模型页标注 Apache-2.0；**商用前请自行复核** |
+| `silero_vad.onnx` | silero-vad 仓库 | MIT |
+| `zh_CN-huayan-medium.onnx` | rhasspy/piper-voices 音色库 | **Piper 音色许可是逐个声明的，本仓库未逐一核对**；商用或再分发前请查该音色的 `voices.json` 条目 |
+
+**服务依赖**：对话能力使用 [DeepSeek API](https://platform.deepseek.com/)（受其服务条款约束，仅文本出本机）。主线的本地版本用 [Ollama](https://ollama.com/) + Qwen3。
+
+> 说句实在话：**音色许可这一格我没敢写成"MIT"或"Apache"**——Piper 的音色是社区各自发布的，仓库级 LICENSE 盖不住它们。真要商用，这一格必须逐个查。
+
+## 许可证
+
+**本仓库代码采用 [GPL-3.0](https://www.gnu.org/licenses/gpl-3.0.html)。**
+
+### 为什么不是 MIT
+
+不是不想，是**不能**：
+
+- `tts/` 与 `demo/` 直接 `import piper`（`piper-tts`，**GPL-3.0**）；
+- 打包出来的 `VoxDeskVoice.exe` 把这个库连同模型一起分发，属于**分发衍生作品**；
+- 那种情况下，整个分发物必须遵守 GPL-3.0（提供源码、保留许可声明）。
+
+**写 MIT 会与事实不符**——懂行的面试官一眼就能看出"MIT 仓库里 bundle 了 GPL 引擎"是自相矛盾的。
+
+### 这意味着什么
+
+| 你可以 | 你需要 |
+| --- | --- |
+| 随便读、跑、改、自己用 | 分发时附上源码与 GPL-3.0 声明 |
+| 商用（自用或内部） | 分发修改版时同样开源（传染性） |
+| 二次开发后开源 | 保留原作者署名与本许可 |
+
+### 只想复用不依赖 Piper 的部分？
+
+`audio/` 切片（采集 / VAD / 降噪 / ASR）**不碰 Piper**，是我从零写的。如果你只想要它，
+可以按 **MIT** 单独取用——在这条 issue/邮件里说明用途即可，我按 MIT 单独授权。
+
+### 未来可能改许可
+
+如果主线把 TTS 换成 Apache-2.0 / MIT 的引擎（`CosyVoice`、`sherpa-onnx` 自带 TTS、`MeloTTS`），
+Piper 一移除，整仓就可以平移到 **Apache-2.0**。这条路径已经记在文档仓的 `08` 与 `09` 里。
 
 ## 说明
 

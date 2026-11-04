@@ -5,6 +5,58 @@
 
 ---
 
+## [v0.17.1] · 2026-11-05 03:15 +08:00 · 临时 demo 分支：DeepSeek 云 LLM
+
+**类型**：工程支线（PATCH）
+**范围**：代码仓分支 `demo/deepseek-voice`；本文档仅作记录，**不改架构与路线**
+**触发**：需求方要一个临时可用 demo（语音 → ASR → DeepSeek → TTS），并明确"写 git 分支，未来版本仍以 docs 为准"
+
+### 这是什么
+
+代码仓新建分支 `demo/deepseek-voice`，里面多一个 `demo/` 工程，把三个已有切片拼成一轮对话：
+
+```
+麦克风 → VAD/录音 → StreamingASR（S4） → DeepSeek Chat API → TTSService + Piper（S1/S2）
+```
+
+**主线不动**：`13-M2process.md` 的 S5 仍是 **本地 Ollama + Qwen3-4B**；本分支是"先看到对话体感"的支线。
+
+| 项 | 主线 S5 | demo 分支 |
+| --- | --- | --- |
+| LLM | Ollama + Qwen3-4B（离线） | DeepSeek API（需网络） |
+| 隐私 | 音频与文本都不出本机 | **只有文本**出本机（ASR 仍本地） |
+| 首 token | 目标 ≤1.2s | 不设目标，先看体感 |
+
+### 交付（分支内）
+
+| 件 | 内容 |
+| --- | --- |
+| `demo/src/voxdesk_demo/llm.py` | DeepSeek Chat 客户端，**标准库实现**（urllib + SSE），量首 token |
+| `demo/src/voxdesk_demo/app.py` | 一轮编排：ASR → LLM → TTS，逐段计时 |
+| `demo/scripts/voice_chat.py` | 三种入口：`--file` / `--seconds` / 按住 `f2`；`--mock` 无 key 也能跑 |
+| `demo/README.md` | 跑法、与主线差异、已知限制 |
+
+### 实测（mock 模式，本机）
+
+| 环节 | 数值 |
+| --- | --- |
+| ASR | 869ms（首次，含模型加载）/ 约 330ms（后续） |
+| TTS | 7530ms（这是播放时长，合成 RTF 0.026） |
+| API 可达性 | 假 key 返回 `HTTP 401` → 域名通、鉴权生效 |
+
+真 API 的首 token 数字要等配好 key 才有——脚本会打印。
+
+### 变更
+
+| ID | 变更 | 文件 |
+| --- | --- | --- |
+| CHG-0115 | 代码仓新增分支 `demo/deepseek-voice` 与 `demo/` 工程（path 依赖 audio + tts） | 代码仓分支 |
+| CHG-0116 | 记录本支线：与主线的差异、实测、回主线的方式（`git checkout master`） | `CHANGELOG` |
+
+> 按需求方要求：**未来版本仍以 `docs/` 为准**。本条目只说明"存在一条支线"，不改变任何架构决策。
+
+---
+
 ## [v0.17.0] · 2026-11-05 03:00 +08:00 · S4 跑通：ASR 首字 39ms
 
 **类型**：工程推进（MINOR）

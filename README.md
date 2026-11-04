@@ -138,7 +138,7 @@ cd demo
 
 ## 许可证
 
-**本仓库代码采用 [GPL-3.0](https://www.gnu.org/licenses/gpl-3.0.html)。**
+**本仓库代码采用 [GPL-3.0](LICENSE)**（全文见仓库根目录的 `LICENSE`，与 gnu.org 发布版逐字一致）。
 
 ### 为什么不是 MIT
 

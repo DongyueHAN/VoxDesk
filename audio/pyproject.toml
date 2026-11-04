@@ -1,0 +1,25 @@
+[project]
+name = "voxdesk-audio"
+version = "0.1.0"
+description = "VoxDesk 端侧音频前端：采集 + Silero VAD 端点（S3）"
+requires-python = "==3.11.*"
+dependencies = [
+    "numpy>=2.0",
+    "sounddevice>=0.5",
+    "onnxruntime>=1.20",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/voxdesk_audio"]
+
+[tool.uv]
+package = true
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+]

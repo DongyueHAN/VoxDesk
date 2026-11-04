@@ -3,9 +3,9 @@
 | 字段 | 值 |
 | --- | --- |
 | 文档 | `docs/13-M2process.md` |
-| 版本 | v0.1.0 |
+| 版本 | v0.1.1 |
 | 状态 | 草案 |
-| 更新 | 2026-11-05 02:35 +08:00 |
+| 更新 | 2026-11-05 03:00 +08:00 |
 | 生效范围 | M2 的四段冲刺、闸门、显存与时延预算；**不改** `05-roadmap.md` 的里程碑定义 |
 
 > **本文接在 [`12-M1process.md`](12-M1process.md) 后面。**
@@ -23,14 +23,18 @@
 
 ## 1. 四个冲刺（S4–S7）
 
-### S4 · ASR 单点（2–3 天）
+### S4 · ASR 单点（2–3 天）✅ 2026-11-05 完成
 
 | 项 | 内容 |
 | --- | --- |
-| 交付 | `audio/` 增 `asr.py`：`sherpa-onnx` + Paraformer 中文流式；`scripts/asr_file.py` 把 wav 转文本 |
+| 交付 | `audio/` 增 `asr.py`：`sherpa-onnx` 流式 ASR（自动识别 zipformer / paraformer）；`asr_file.py` 单文件、`asr_cer.py` 50 句 CER |
 | 学习 | `sherpa-onnx` 的 `examples/`（只读 Python 那一段）+ Paraformer 流式接口 |
 | 出门闸门 | 5s 中文 wav → 文本可读（自己听一遍，错字心里有数）；**首字延迟 ≤ 500ms**（打印时间戳） |
 | 卡住怎么办 | 流式模型不会用 → 先用非流式 Paraformer"说完再转"，M3 再回流式 |
+| **产物** | 代码仓 `v0.6.0`（audio 0.3.0）：`asr.py` + `asr_file.py` + `asr_cer.py` |
+| **实测** | 首字 **39ms**（判据 500ms）；RTF **0.060**；50 句 CER **24.3%**；int8 与 fp32 的 CER **完全相同**（24.6%） |
+| **选型过程** | 先试 `zipformer-zh-14M`（25MB）：首字 9ms 但 **CER 34.3%**，不可用 → 换 `streaming-paraformer-bilingual-zh-en`（226MB int8） |
+| **副产物** | ① 流式模型要 **500ms 尾巴静音**才吐最后几个字，不加会截断（CER 31.4% → 24.3%）② 用 TTS 合成音做 ASR 评测**偏悲观**：同模型在包内真人录音上可读 |
 
 ### S5 · LLM 接入（2 天）
 
@@ -66,7 +70,7 @@
 | 环节 | 预算 | 依据 |
 | --- | --- | --- |
 | VAD 静音尾 | 600ms | M1 实测（`min_silence` 可调，300–600 都 0 切错） |
-| ASR 首字 | 300–400ms | `sherpa-onnx` + Paraformer 流式，CPU |
+| ASR 首字 | 300–400ms | `sherpa-onnx` + Paraformer 流式，CPU；**S4 实测 39ms**，预算大幅富余 |
 | LLM 首 token | 900ms | `07` §6.2 目标 ≤1.2s，取中位 |
 | TTS 首包 | 60–170ms | M1 实测（Piper RTF 0.026，首音 56–169ms） |
 | **合计** | **≈ 2.0–2.3s** | 验收线 3.5s，留 1.2s 余量给工具与抖动 |

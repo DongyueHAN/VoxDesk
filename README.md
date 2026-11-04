@@ -5,8 +5,8 @@
 
 | 项 | 值 |
 | --- | --- |
-| 当前版本 | **v0.15.1（进度表对齐：CMP-01 🟡 / CMP-07 ✅）** |
-| 文档定稿 | 2026-11-05 02:25 +08:00 |
+| 当前版本 | **v0.16.0（进程文档拆分：12 = M1，13 = M2）** |
+| 文档定稿 | 2026-11-05 02:35 +08:00 |
 | 当前阶段 | **M1 完成**（采集 / 端点 / 降噪 / PTT）；下一步 M2 接 ASR |
 | 代码状态 | **跑通 S0–S3**：`D:\VoxDesk\tts` v0.3.0 + `audio` v0.4.0（Piper RTF 0.026；端点切错 0/50） |
 | 关键技术决策 | 本地优先、半双工先行、自研语音管线、委托 harness |
@@ -148,7 +148,8 @@ flowchart TB
 | [docs/08-oss-shortlist.md](docs/08-oss-shortlist.md) | **开源调研**：选型（STT / 系统调用 / TTS）+ 读哪几站、三遍读法、何时停 | v0.5.0 |
 | [docs/09-tts-module.md](docs/09-tts-module.md) | **TTS 模块**：语言、架构、接口、三阶段实施 + CosyVoice 迁移设计 | v0.4.5 |
 | [docs/11-peer-repo-crosscheck.md](docs/11-peer-repo-crosscheck.md) | **同伴仓库核查**：12 条不一致（A/B/C 三级）+ 边界与接缝 | v0.1.1 |
-| [docs/12-process.md](docs/12-process.md) | **工程进程**：三轴节奏、四个冲刺、闸门、ADR 触发条件 | v0.1.4 |
+| [docs/12-M1process.md](docs/12-M1process.md) | **M1 进程**：三轴节奏、S0–S3、闸门、ADR 触发条件 | v0.2.0 |
+| [docs/13-M2process.md](docs/13-M2process.md) | **M2 进程**：S4–S7、时延与显存预算、M2 闸门 | v0.1.0 |
 | [docs/adr/](docs/adr/) | 架构决策记录（10 份，含 ADR-0010 两仓边界） | — |
 | [CHANGELOG.md](CHANGELOG.md) | 版本变更流水（含时间戳） | 现行 |
 
@@ -159,12 +160,13 @@ flowchart TB
 3. 选型理由在 [docs/04-tech-stack.md](docs/04-tech-stack.md) 与 [docs/07-model-layer.md](docs/07-model-layer.md)；
 4. 想知道"为什么这么定"，翻 [docs/adr/](docs/adr/)；
 5. 这活儿怎么拆、多久做完，看 [docs/05-roadmap.md](docs/05-roadmap.md)；
-6. 具体怎么干、学到什么程度停手，看 [docs/12-process.md](docs/12-process.md)。
+6. 具体怎么干、学到什么程度停手：M1 看 [docs/12-M1process.md](docs/12-M1process.md)，M2 看 [docs/13-M2process.md](docs/13-M2process.md)。
 
 ## 5. 版本记录
 
 | 版本 | 时间 | 摘要 |
 | --- | --- | --- |
+| v0.16.0 | 2026-11-05 02:35 +08:00 | 12-process 更名 12-M1process；新增 13-M2process（S4–S7、时延/显存预算） |
 | v0.15.1 | 2026-11-05 02:25 +08:00 | 进度表对齐代码仓：CMP-01 由 ⬜ 改 🟡，CMP-07 由 🟡 改 ✅ |
 | v0.15.0 | 2026-11-05 02:15 +08:00 | M1 完成：谱减降噪（bypass）+ PTT 热键；0dB 下切错 1→0，15 个单测 |
 | v0.14.0 | 2026-11-05 02:05 +08:00 | S3 跑通：Silero VAD 端点，50 句切错 0 条；踩到 64 点上下文坑 |

@@ -41,6 +41,8 @@
 │   ├── 08-oss-shortlist.md    开源调研：选型 + 读哪些 / 怎么读 / 何时停
 │   ├── 09-tts-module.md       TTS 模块（第一个可交付切片）
 │   ├── 11-peer-repo-crosscheck.md  同伴仓库核查：不一致清单与边界
+│   ├── 12-M1process.md        M1 进程：三轴节奏、S0–S3、闸门、ADR 触发条件
+│   ├── 13-M2process.md        M2 进程：S4–S7、时延/显存预算、M2 闸门
 │   └── adr/ADR-XXXX-*.md      架构决策记录（一事一档）
 └── 【研究资料，暂不入库或单独管理】
     ├── HumDial-Challenge-调研/

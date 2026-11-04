@@ -9,6 +9,7 @@ __pycache__/
 
 # ---- 合成产物（本地验证用，不入库）----
 tts/out/
+tts/cache/
 *.wav
 *.mp3
 

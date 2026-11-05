@@ -1,14 +1,14 @@
-# 13 · M2 工程进程：本地模型闭环（S4–S7）
+# 08 · M2 工程进程：本地模型闭环（S4–S7）
 
 | 字段 | 值 |
 | --- | --- |
-| 文档 | `docs/13-M2process.md` |
-| 版本 | v0.1.1 |
+| 文档 | `docs/08-M2process.md` |
+| 版本 | v0.2.0 |
 | 状态 | 草案 |
-| 更新 | 2026-11-05 03:00 +08:00 |
+| 更新 | 2026-11-05 22:10 +08:00 |
 | 生效范围 | M2 的四段冲刺、闸门、显存与时延预算；**不改** `05-roadmap.md` 的里程碑定义 |
 
-> **本文接在 [`12-M1process.md`](12-M1process.md) 后面。**
+> **本文接在 [`archive/12-M1process.md`](archive/12-M1process.md) 后面。**
 > 三轴节奏（§1）、闸门定义（§2）、五条不变式（§4）、ADR 触发条件（§5）是**通用规则**，不在这里重复；
 > 本文只回答：**M2 拆成几段、每段的闸门是什么、什么会先崩。**
 
@@ -132,8 +132,8 @@ M1 的音频链路几乎不吃显存（VAD 2.3MB、Piper 60MB 走 CPU）。M2 �
 | 文档 | 管什么 | 本文是否改它 |
 | --- | --- | --- |
 | `05-roadmap.md` | M2 的任务表与验收（6–7 天） | 不改；本文把它拆成 S4–S7（7–9 天，更保守） |
-| `08-oss-shortlist.md` §9 | 谁在 M2 进场：`sherpa-onnx`、`ollama`、`piper1-gpl`、`openWakeWord` | 不改 |
-| `09-tts-module.md` | TTS 侧接口（M1 已完成） | 不改；S7 只调用 `TTSService.speak()` |
-| `12-M1process.md` | 三轴/闸门/不变式/ADR 触发条件 | 不改；本文沿用 |
+| `archive/08-oss-shortlist.md` §9 | 谁在 M2 进场：`sherpa-onnx`、`ollama`、`piper1-gpl`、`openWakeWord` | 不改 |
+| `archive/09-tts-module.md` | TTS 侧接口（M1 已完成） | 不改；S7 只调用 `TTSService.speak()` |
+| `archive/12-M1process.md` | 三轴/闸门/不变式/ADR 触发条件 | 不改；本文沿用 |
 
 三者冲突时的优先级与 `12` 一致：**闸门 > 里程碑 > 阅读顺序**。

@@ -4,7 +4,7 @@
 | --- | --- |
 | 状态 | 生效 |
 | 日期 | 2026-10-29 15:35 +08:00 |
-| 相关 | `docs/11-peer-repo-crosscheck.md`、REQ-C-001、REQ-F-013、REQ-N-002 |
+| 相关 | `docs/archive/11-peer-repo-crosscheck.md`、REQ-C-001、REQ-F-013、REQ-N-002 |
 
 ## 背景
 

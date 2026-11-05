@@ -1,0 +1,1288 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>声纹可视化 · VoxDesk</title>
+<style>
+  :root {
+    --bg:#000; --panel:#07080c; --panel2:#050609;
+    --line:#171a24; --line2:#252b3b;
+    --text:#e9eefb; --dim:#7d879c; --dim2:#4e576a;
+    --accent:#38bdf8; --accent2:#818cf8;
+    --accent-soft:rgba(56,189,248,.14);
+    --accent-glow:rgba(56,189,248,.38);
+    --mono: ui-monospace, "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+  }
+  * { box-sizing:border-box; }
+  html,body { height:100%; }
+  body {
+    margin:0; background:var(--bg); color:var(--text); overflow-x:hidden;
+    font:14px/1.5 "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+  }
+  body::before {
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background:
+      radial-gradient(1100px 760px at 18% -12%, rgba(56,189,248,.055), transparent 62%),
+      radial-gradient(900px 700px at 112% 112%, rgba(129,140,248,.045), transparent 62%);
+  }
+  .app {
+    position:relative; z-index:1; min-height:100vh; display:flex; flex-direction:column;
+    padding:20px clamp(14px,3vw,40px) 20px; gap:16px;
+  }
+  .top { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+  .brand { font-size:12px; font-weight:600; letter-spacing:.18em; color:#dfe7f7; display:flex; align-items:center; }
+  .brand i { width:7px; height:7px; border-radius:50%; background:var(--accent); box-shadow:0 0 12px var(--accent); margin-right:10px; display:inline-block; }
+  .brand em { font-style:normal; color:var(--dim); font-weight:400; letter-spacing:.1em; margin-left:8px; }
+  nav { display:flex; align-items:center; gap:10px; }
+  nav a {
+    color:var(--dim); text-decoration:none; font-size:12px; border:1px solid var(--line);
+    padding:7px 12px; border-radius:999px; transition:color .2s, border-color .2s, background .2s;
+  }
+  nav a:hover { color:var(--text); border-color:var(--line2); background:#0a0c12; }
+  .grid {
+    flex:1; min-height:0; display:grid; grid-template-columns:minmax(0,1fr) minmax(300px,344px);
+    gap:18px; align-items:stretch;
+  }
+
+  /* ---------------- 舞台 ---------------- */
+  .stage {
+    position:relative; border:1px solid var(--line); border-radius:18px; overflow:hidden;
+    min-height:min(76vh, 820px);
+    background:
+      radial-gradient(ellipse at 50% 44%, #080910 0%, #040407 52%, #000 100%);
+    transition:border-color .35s, box-shadow .35s;
+  }
+  .stage.rec {
+    border-color:rgba(255,71,87,.5);
+    box-shadow:0 0 0 1px rgba(255,71,87,.18), inset 0 0 90px rgba(255,71,87,.06);
+  }
+  .stage canvas { position:absolute; inset:0; width:100%; height:100%; display:block; }
+  .stage::after { /* 极淡的扫描线，别喧宾夺主 */
+    content:""; position:absolute; inset:0; pointer-events:none; opacity:.13;
+    background:repeating-linear-gradient(180deg, rgba(255,255,255,.05) 0 1px, transparent 1px 4px);
+    mix-blend-mode:overlay;
+  }
+  .stage-badge {
+    position:absolute; left:18px; top:16px; font:10px/1 var(--mono); letter-spacing:.18em;
+    color:var(--dim2); pointer-events:none; z-index:2;
+  }
+  .stage-badge b { color:var(--dim); font-weight:400; }
+  .stage-cap {
+    position:absolute; left:18px; bottom:16px; right:130px; z-index:2; pointer-events:none;
+    display:flex; align-items:center; gap:9px; font-size:11.5px; color:var(--dim);
+  }
+  .stage-cap .live { width:6px; height:6px; border-radius:50%; background:var(--accent); box-shadow:0 0 10px var(--accent); flex:none; }
+  .stage.rec .stage-cap .live { background:#ff4757; box-shadow:0 0 12px #ff4757; animation:pulse 1s infinite; }
+  .modes {
+    position:absolute; right:14px; top:12px; z-index:2; display:flex; padding:3px;
+    background:rgba(6,7,11,.72); border:1px solid var(--line); border-radius:999px;
+    backdrop-filter:blur(8px);
+  }
+  .modes button {
+    background:none; border:0; color:var(--dim); font-size:11px; padding:6px 11px;
+    border-radius:999px; cursor:pointer; font-family:inherit;
+  }
+  .modes button.on { background:var(--accent-soft); color:var(--text); }
+  .corner { position:absolute; width:16px; height:16px; border:1px solid #2a3142; opacity:.55; z-index:2; }
+  .corner.tl { left:12px; top:12px; border-right:0; border-bottom:0; border-radius:5px 0 0 0; }
+  .corner.br { right:12px; bottom:12px; border-left:0; border-top:0; border-radius:0 0 5px 0; }
+
+  /* ---------------- 侧栏 ---------------- */
+  .side { display:flex; flex-direction:column; gap:12px; min-width:0; }
+  .card {
+    background:linear-gradient(180deg, var(--panel), var(--panel2));
+    border:1px solid var(--line); border-radius:15px; padding:15px;
+  }
+  .timbre { display:flex; align-items:center; gap:14px; }
+  .orb {
+    width:58px; height:58px; border-radius:50%; flex:none; position:relative; overflow:hidden;
+    background:var(--accent); box-shadow:0 0 0 1px rgba(255,255,255,.08) inset, 0 0 38px var(--accent-glow);
+    transition:background .55s ease, box-shadow .55s ease;
+  }
+  .orb::after {
+    content:""; position:absolute; inset:-8% -12% 32% -12%;
+    background:linear-gradient(180deg, rgba(255,255,255,.62), rgba(255,255,255,0));
+    opacity:.5; filter:blur(3px); border-radius:50%;
+  }
+  .tinfo { min-width:0; }
+  .tname { font-size:15px; font-weight:600; letter-spacing:.02em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .hex { font:11px var(--mono); letter-spacing:.1em; color:var(--dim); margin-top:3px; }
+  .source { font-size:10px; line-height:1.45; color:var(--dim2); margin-top:7px; }
+  .source b { color:var(--dim); font-weight:400; }
+
+  .rule-head { display:flex; justify-content:space-between; align-items:baseline; gap:8px; margin-bottom:10px; }
+  .rule-head span { font-size:10px; letter-spacing:.14em; color:var(--dim2); text-transform:uppercase; }
+  .rule-head b { font:11px var(--mono); font-weight:500; color:var(--text); }
+  .rule-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:9px; }
+  .rule-grid label {
+    display:flex; align-items:center; justify-content:space-between; gap:6px;
+    background:#030406; border:1px solid var(--line); border-radius:8px;
+    padding:6px 8px; font-size:10.5px; color:var(--dim);
+  }
+  .rule-grid select {
+    background:transparent; border:0; color:var(--text); font:11px var(--mono);
+    outline:none; cursor:pointer; text-align:right;
+  }
+  .rule-grid select option { background:#080a0f; color:var(--text); }
+  .range-row { display:block; font-size:10.5px; color:var(--dim); }
+  .range-row b { color:var(--text); font:11px var(--mono); font-weight:500; }
+  input[type=range] {
+    width:100%; margin:7px 0 0; height:3px; accent-color:var(--accent);
+    background:#0e1017; border-radius:99px; cursor:pointer;
+  }
+  .rule-note { font-size:9.5px; line-height:1.5; color:var(--dim2); margin-top:7px; }
+
+  .metric { display:flex; align-items:baseline; justify-content:space-between; gap:10px; padding:5px 0; border-bottom:1px dashed #11141c; font-size:11.5px; }
+  .metric:last-of-type { border-bottom:0; }
+  .metric span { color:var(--dim); letter-spacing:.02em; }
+  .metric b { font:12px var(--mono); font-weight:500; color:var(--text); white-space:nowrap; }
+  .level { height:3px; border-radius:99px; background:#0e1017; margin:2px 0 8px; overflow:hidden; }
+  .level i { display:block; height:100%; width:0%; background:linear-gradient(90deg, var(--accent), var(--accent2)); transition:width .12s linear; }
+  .bands { display:flex; flex-direction:column; gap:6px; margin-top:10px; }
+  .band { display:grid; grid-template-columns:30px 1fr 34px; gap:8px; align-items:center; font:10px var(--mono); color:var(--dim2); }
+  .band .track { height:3px; border-radius:99px; background:#0e1017; overflow:hidden; }
+  .band .fill { display:block; height:100%; width:0%; background:linear-gradient(90deg,var(--accent),var(--accent2)); transition:width .45s ease; }
+  .band b { font-weight:400; text-align:right; color:var(--dim); }
+
+  .chat label { display:block; font-size:10px; letter-spacing:.16em; color:var(--dim2); margin-bottom:9px; text-transform:uppercase; }
+  .inputrow { display:flex; gap:8px; }
+  input[type=text] {
+    flex:1; min-width:0; background:#030406; border:1px solid var(--line); border-radius:10px;
+    color:var(--text); padding:10px 12px; font-size:13px; outline:none; font-family:inherit;
+    transition:border-color .2s, box-shadow .2s;
+  }
+  input[type=text]::placeholder { color:#3c4558; }
+  input[type=text]:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
+  .primary {
+    background:var(--accent); border:0; color:#02050b; font-weight:600; font-size:12.5px;
+    padding:10px 15px; border-radius:10px; cursor:pointer; font-family:inherit;
+    transition:filter .2s, opacity .2s; white-space:nowrap;
+  }
+  .primary:hover { filter:brightness(1.08); }
+  .primary:disabled { opacity:.4; cursor:default; }
+  .reply { margin-top:12px; font-size:12.5px; line-height:1.62; color:#cdd7ea; }
+  .reply:empty { display:none; }
+  .meta-row { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:8px; }
+  .timings { font:10px/1.5 var(--mono); color:var(--dim2); }
+  .ghost {
+    background:none; border:1px solid var(--line); color:var(--dim); border-radius:7px;
+    font-size:10.5px; padding:4px 8px; cursor:pointer; font-family:inherit; flex:none;
+  }
+  .ghost:hover { color:var(--text); border-color:var(--line2); }
+  .mic {
+    margin-top:13px; width:100%; display:flex; align-items:center; justify-content:center; gap:8px;
+    background:#06070b; border:1px solid var(--line); color:var(--text); padding:10px;
+    border-radius:10px; cursor:pointer; font-family:inherit; font-size:12px;
+    transition:border-color .2s, background .2s, color .2s;
+  }
+  .mic:hover { border-color:var(--line2); }
+  .mic .rec { width:7px; height:7px; border-radius:50%; background:#ff4757; box-shadow:0 0 8px #ff4757; flex:none; }
+  .mic.on { background:rgba(255,71,87,.09); border-color:rgba(255,71,87,.42); color:#ffc0c6; }
+  .mic.on .rec { animation:pulse 1s infinite; }
+  @keyframes pulse { 50% { opacity:.22; transform:scale(.72); } }
+  .hint { margin-top:8px; font-size:10px; line-height:1.55; color:var(--dim2); }
+  .hint code { font-family:var(--mono); color:var(--dim); font-size:9.5px; }
+
+  footer {
+    display:flex; justify-content:space-between; gap:14px; flex-wrap:wrap;
+    font:9.5px/1.5 var(--mono); color:#3b4354; letter-spacing:.04em;
+  }
+  footer a { color:#4c576d; text-decoration:none; }
+  footer a:hover { color:var(--dim); }
+
+  @media (max-width: 940px) {
+    .grid { grid-template-columns:1fr; }
+    .stage { min-height:56vh; }
+    .side { display:grid; grid-template-columns:1fr 1fr; }
+    .chat { grid-column:1 / -1; }
+  }
+  @media (max-width: 620px) {
+    .side { display:flex; }
+    .stage { min-height:48vh; }
+    .stage-cap { right:18px; }
+    .modes button { padding:6px 9px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand"><i></i>VOXDESK<em>/ 声纹</em></div>
+    <nav>
+      <a href="/">← 对话</a>
+      <a href="https://github.com/QwenAudio/CosyVoice" target="_blank" rel="noreferrer">CosyVoice ↗</a>
+    </nav>
+  </header>
+
+  <main class="grid">
+    <section class="stage" id="stage">
+      <canvas id="canvas"></canvas>
+      <div class="stage-badge" id="stageBadge">HILBERT <b>ORDER 6</b> · 4096 PTS · 中心扩展</div>
+      <div class="modes">
+        <button data-mode="hilbert" class="on">希尔伯特</button>
+        <button data-mode="linear">线性波形</button>
+      </div>
+      <div class="stage-cap"><span class="live"></span><span id="status">待机 · 输入一句话，或者录音试试音色</span></div>
+      <div class="corner tl"></div>
+      <div class="corner br"></div>
+    </section>
+
+    <aside class="side">
+      <div class="card timbre">
+        <div class="orb" id="orb"></div>
+        <div class="tinfo">
+          <div class="tname" id="tname">等待声音</div>
+          <div class="hex" id="hex">#38BDF8</div>
+          <div class="source" id="source"><b>音色 → 颜色</b> · CosyVoice CAM++ 前端统计<br>（未加载 campplus.onnx）</div>
+        </div>
+      </div>
+
+      <div class="card rule">
+        <div class="rule-head">
+          <span>HILBERT 阶数规则</span>
+          <b id="orderNow">ORDER 6 · 4096 点</b>
+        </div>
+        <div class="rule-grid">
+          <label>下限 <select id="minOrder"></select></label>
+          <label>上限 <select id="maxOrder"></select></label>
+        </div>
+        <label class="range-row">每 <b id="stepVal">2.0s</b> 升一阶
+          <input id="stepSec" type="range" min="0.5" max="5" step="0.5" value="2" />
+        </label>
+        <div class="rule-note">录音从下限起，每 X 秒 +1 阶，封顶上限；待机 / TTS 用上限阶数。</div>
+      </div>
+
+      <div class="card metrics">
+        <div class="metric"><span>实时音量</span><b id="m-live">0.00</b></div>
+        <div class="level"><i id="lvl"></i></div>
+        <div class="metric"><span>频谱质心</span><b id="m-centroid">—</b></div>
+        <div class="metric"><span>基频</span><b id="m-f0">—</b></div>
+        <div class="metric"><span>频谱平坦度</span><b id="m-flat">—</b></div>
+        <div class="metric"><span>语音 RMS</span><b id="m-rms">—</b></div>
+        <div class="bands">
+          <div class="band"><span>LOW</span><span class="track"><i class="fill" id="b-low"></i></span><b id="v-low">0%</b></div>
+          <div class="band"><span>MID</span><span class="track"><i class="fill" id="b-mid"></i></span><b id="v-mid">0%</b></div>
+          <div class="band"><span>HIGH</span><span class="track"><i class="fill" id="b-high"></i></span><b id="v-high">0%</b></div>
+        </div>
+      </div>
+
+      <div class="card chat">
+        <label>说一句话，让它变成形状</label>
+        <div class="inputrow">
+          <input id="q" type="text" autocomplete="off" placeholder="比如：你好，介绍一下你自己" />
+          <button class="primary" id="send">生成</button>
+        </div>
+        <div class="reply" id="reply"></div>
+        <div class="meta-row">
+          <div class="timings" id="timings"></div>
+          <button class="ghost" id="replay" hidden>重播</button>
+        </div>
+        <button class="mic" id="mic"><span class="rec"></span><span id="mic-label">录音分析音色</span></button>
+        <div class="hint">麦克风只做音色分析，<b>不做语音识别</b>（ASR 未接入）。<br>音量 → 波形振幅；音色 → 颜色。背景保持深黑。</div>
+      </div>
+    </aside>
+  </main>
+
+  <footer>
+    <span>VOXDESK-WEB · w0.4 · HILBERT ORDER RULE + AFTERGLOW</span>
+    <span>Manim 的 <a href="https://docs.manim.community/en/stable/reference/manim.animation.changing.TracedPath.html" target="_blank" rel="noreferrer">TracedPath</a> / <a href="https://docs.manim.community/en/stable/reference/manim.animation.composition.LaggedStart.html" target="_blank" rel="noreferrer">LaggedStart</a> 思路 · Canvas 伪残影 · 音色参考 <a href="https://github.com/QwenAudio/CosyVoice" target="_blank" rel="noreferrer">CosyVoice</a></span>
+  </footer>
+</div>
+
+<script>
+"use strict";
+
+/* ============================================================
+ * 0. 常量与状态
+ * ============================================================ */
+const MAX_ORDER = 6;                 // 阶数硬上限：4^6 = 4096 点
+const MAX_ENV = 1 << (2 * MAX_ORDER); // 4096，音频包络的存储分辨率
+const HISTORY_HZ = 200;              // 录音包络 5ms 一格
+const HISTORY_MAX = 4000;            // 20s × 200Hz
+const BUCKETS = 11;                  // 按振幅分桶，减少每帧 stroke 次数
+const GLOW_START = 5;                // 只让高振幅段进入残影层
+const AFTERGLOW_TAU = .30;           // 残影时间常数：约 0.8s 衰减到 7%
+const RULE_KEY = "voxdesk.hilbert.rule.v1";
+const MUTE = new URLSearchParams(location.search).get("mute") === "1"; // 截图/演示：只画不播
+
+const $ = id => document.getElementById(id);
+const canvas = $("canvas");
+const ctx = canvas.getContext("2d");
+const glowCanvas = document.createElement("canvas");
+const glowCtx = glowCanvas.getContext("2d");
+const stage = $("stage");
+const statusEl = $("status");
+const replyEl = $("reply");
+const timingsEl = $("timings");
+const qEl = $("q");
+const sendBtn = $("send");
+const micBtn = $("mic");
+const micLabel = $("mic-label");
+const replayBtn = $("replay");
+const minOrderEl = $("minOrder");
+const maxOrderEl = $("maxOrder");
+const stepSecEl = $("stepSec");
+const stepValEl = $("stepVal");
+const orderNowEl = $("orderNow");
+
+function clampInt(v, lo, hi, fallback) {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.max(lo, Math.min(hi, Math.round(n)));
+}
+
+function loadRule() {
+  const fallback = { minOrder: 3, maxOrder: 6, step: 2.0 };
+  try {
+    const raw = JSON.parse(localStorage.getItem(RULE_KEY) || "null");
+    if (!raw) return fallback;
+    let minOrder = clampInt(raw.minOrder, 1, MAX_ORDER, fallback.minOrder);
+    let maxOrder = clampInt(raw.maxOrder, 1, MAX_ORDER, fallback.maxOrder);
+    if (minOrder > maxOrder) maxOrder = minOrder;
+    const step = Math.max(.5, Math.min(5, Number(raw.step) || fallback.step));
+    return { minOrder, maxOrder, step };
+  } catch (e) {
+    return fallback;
+  }
+}
+
+const initialRule = loadRule();
+
+const state = {
+  mode: "hilbert",
+  hue: 195, sat: .8, light: .58,
+  rule: initialRule,
+  order: initialRule.maxOrder,
+  sideShown: 0,
+  playing: false, progress: -1, playingLabel: "",
+  level: 0,
+  source: "demo",       // demo | tts | mic
+  ttsEnv: null, clipDur: 0,
+  epoch: 0,             // 音色请求代次：TTS/新录音开始后，迟到的麦克风结果不再覆盖颜色
+  ttsAnalyser: null, ttsSource: null, playStart: 0, playDur: 0,
+};
+
+/* ============================================================
+ * 1. 希尔伯特曲线：一维音频顺序 → 二维方格路径
+ *    阶数可变：order k → 4^k 点，中心固定，边长 2^k。
+ * ============================================================ */
+function hilbertPoints(order) {
+  const n = 1 << order;
+  const pts = [];
+  for (let d = 0; d < n * n; d++) {
+    let x = 0, y = 0, t = d;
+    for (let s = 1; s < n; s <<= 1) {
+      const rx = 1 & (t >> 1);
+      const ry = 1 & (t ^ rx);
+      if (ry === 0) {
+        if (rx === 1) { x = s - 1 - x; y = s - 1 - y; }
+        const tmp = x; x = y; y = tmp;
+      }
+      x += s * rx;
+      y += s * ry;
+      t >>= 2;
+    }
+    pts.push([x / (n - 1), y / (n - 1)]);
+  }
+  return pts;
+}
+
+const hilbertCache = new Map();
+function getHilbert(order) {
+  if (!hilbertCache.has(order)) hilbertCache.set(order, hilbertPoints(order));
+  return hilbertCache.get(order);
+}
+
+function demoEnvelope(n) {
+  const env = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const t = i / (n - 1);
+    let v = 0;
+    v += .92 * Math.exp(-Math.pow((t - .16) / .075, 2));
+    v += .55 * Math.exp(-Math.pow((t - .38) / .11, 2));
+    v += .78 * Math.exp(-Math.pow((t - .60) / .06, 2));
+    v += .62 * Math.exp(-Math.pow((t - .83) / .09, 2));
+    v *= .62 + .38 * Math.abs(Math.sin(i * .37));
+    env[i] = Math.min(1, v * .72); // 待机样例别太满，留出颜色
+  }
+  return env;
+}
+
+const demoEnv = demoEnvelope(MAX_ENV);
+
+function orderForDuration(sec) {
+  const { minOrder, maxOrder, step } = state.rule;
+  const o = minOrder + Math.floor(Math.max(0, sec) / step);
+  return Math.max(minOrder, Math.min(maxOrder, o));
+}
+
+function targetOrder() {
+  if (mic.active || state.source === "mic") return orderForDuration(mic.envLen / HISTORY_HZ);
+  return state.rule.maxOrder; // 待机 / TTS 用上限阶数，保证满屏细节
+}
+
+function pointsFor(order) { return 1 << (2 * order); }
+
+function updateOrder(force = false) {
+  const next = targetOrder();
+  if (!force && next === state.order) return;
+  state.order = next;
+  const pts = pointsFor(next);
+  orderNowEl.textContent = `ORDER ${next} · ${pts} 点`;
+  updateStageBadge();
+}
+
+function updateStageBadge() {
+  const pts = pointsFor(state.order);
+  $("stageBadge").innerHTML = state.mode === "hilbert"
+    ? `HILBERT <b>ORDER ${state.order}</b> · ${pts} PTS · 中心扩展`
+    : `LINEAR <b>${pts} PTS</b> · ORDER ${state.order}`;
+}
+
+function resampleEnv(src, points, scale = 1) {
+  const out = new Float32Array(points);
+  if (!src || src.length === 0) return out;
+  if (src.length === 1) {
+    out.fill(Math.min(1, Math.max(0, src[0] * scale)));
+    return out;
+  }
+  const last = src.length - 1;
+  for (let i = 0; i < points; i++) {
+    const pos = points === 1 ? 0 : (i / (points - 1)) * last;
+    const i0 = Math.floor(pos);
+    const i1 = Math.min(i0 + 1, last);
+    const f = pos - i0;
+    const v = (src[i0] * (1 - f) + src[i1] * f) * scale;
+    out[i] = Math.min(1, Math.max(0, v));
+  }
+  return out;
+}
+
+function getEnvelope(points) {
+  if (mic.active || (state.source === "mic" && mic.envLen > 0)) {
+    return resampleEnv(mic.envHistory.subarray(0, mic.envLen), points, mic.displayScale);
+  }
+  if (state.source === "tts" && state.ttsEnv) {
+    return resampleEnv(state.ttsEnv, points, 1);
+  }
+  return resampleEnv(demoEnv, points, 1);
+}
+
+
+/* ============================================================
+ * 2. 音色 → 颜色 / UI
+ * ============================================================ */
+function hexToRgb(hex) {
+  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex || "");
+  return m ? [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)] : [56, 189, 248];
+}
+function rgba(hex, a) {
+  const [r, g, b] = hexToRgb(hex);
+  return `rgba(${r},${g},${b},${a})`;
+}
+function hsla(h, s, l, a) {
+  return `hsla(${h.toFixed(1)},${(s * 100).toFixed(1)}%,${(l * 100).toFixed(1)}%,${a})`;
+}
+function fmtInt(n) { return (n == null) ? "—" : Number(n).toLocaleString("en-US"); }
+
+function setStatus(text) { statusEl.textContent = text; }
+
+function applyTimbre(t, source) {
+  if (!t || t.error || t.silent) {
+    if (t && t.silent) setStatus("等待人声…");
+    return;
+  }
+  state.hue = Number(t.hue) || 0;
+  state.sat = Number(t.saturation) || .8;
+  state.light = Number(t.lightness) || .58;
+  const color = t.color || "#38bdf8";
+  const accent = t.accent || color;
+  const root = document.documentElement.style;
+  root.setProperty("--accent", color);
+  root.setProperty("--accent2", accent);
+  root.setProperty("--accent-soft", rgba(color, .14));
+  root.setProperty("--accent-glow", rgba(color, .38));
+
+  $("orb").style.background = color;
+  $("orb").style.boxShadow = `0 0 0 1px rgba(255,255,255,.09) inset, 0 0 42px ${rgba(color, .45)}`;
+  $("hex").textContent = color.toUpperCase();
+  $("tname").textContent = t.label || "未知音色";
+  $("source").innerHTML = `<b>${source === "mic" ? "麦克风" : "Piper 语音"}</b> · CAM++ 前端统计`
+    + `<br>80D log-mel → 频带 / 质心 / 帧通量`;
+
+  $("m-centroid").textContent = `${fmtInt(t.centroid_hz)} Hz`;
+  $("m-f0").textContent = t.f0_hz ? `${t.f0_hz} Hz · ${t.note || ""}` : "—";
+  $("m-flat").textContent = Number(t.flatness).toFixed(2);
+  $("m-rms").textContent = Number(t.rms).toFixed(3);
+
+  const bands = t.bands || {};
+  for (const k of ["low", "mid", "high"]) {
+    const pct = Math.round((Number(bands[k]) || 0) * 100);
+    $("b-" + k).style.width = pct + "%";
+    $("v-" + k).textContent = pct + "%";
+  }
+  if (source === "tts") setStatus(`已生成 · ${t.label || ""} · ${color.toUpperCase()}`);
+}
+
+function updateLevel(level) {
+  state.level = level;
+  const el = $("lvl");
+  if (el) el.style.width = Math.min(100, level * 180).toFixed(1) + "%";
+  const txt = $("m-live");
+  if (txt) txt.textContent = level.toFixed(2);
+}
+
+/* ============================================================
+ * 3. Canvas 尺寸 / 残影层
+ * ============================================================ */
+let W = 0, H = 0, DPR = 1;
+
+function resize() {
+  const r = stage.getBoundingClientRect();
+  W = Math.max(300, Math.round(r.width));
+  H = Math.max(300, Math.round(r.height));
+  DPR = Math.min(2, window.devicePixelRatio || 1);
+  canvas.width = Math.round(W * DPR);
+  canvas.height = Math.round(H * DPR);
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  glowCanvas.width = canvas.width;
+  glowCanvas.height = canvas.height;
+  glowCtx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  glowCtx.clearRect(0, 0, W, H);
+}
+new ResizeObserver(resize).observe(stage);
+resize();
+
+function clearGlow() {
+  glowCtx.save();
+  glowCtx.globalCompositeOperation = "source-over";
+  glowCtx.clearRect(0, 0, W, H);
+  glowCtx.restore();
+}
+
+function fadeGlow(dt) {
+  // 类比 Manim TracedPath(dissipating_time=...)：按真实时间擦掉旧轨迹，
+  // 这样 30fps 和低帧率下的"延时"体感一致。
+  const alpha = 1 - Math.exp(-Math.max(0, dt) / AFTERGLOW_TAU);
+  glowCtx.save();
+  glowCtx.globalCompositeOperation = "destination-out";
+  glowCtx.fillStyle = `rgba(0,0,0,${alpha})`;
+  glowCtx.fillRect(0, 0, W, H);
+  glowCtx.restore();
+  // 用 source-over 保留颜色，叠到主画布时才 lighter；
+  // 否则静态高亮每帧相加，会一路烧成白色。
+  glowCtx.globalCompositeOperation = "source-over";
+}
+
+function compositeGlow() {
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  ctx.globalAlpha = .9;
+  ctx.drawImage(glowCanvas, 0, 0, W, H);
+  ctx.restore();
+}
+
+function drawGlowDot(g, x, y, r, whiteA, colorA) {
+  const grd = g.createRadialGradient(x, y, 0, x, y, r);
+  grd.addColorStop(0, `rgba(255,255,255,${whiteA})`);
+  grd.addColorStop(.28, hsla(state.hue, state.sat, Math.min(.82, state.light + .15), colorA));
+  grd.addColorStop(1, "rgba(0,0,0,0)");
+  g.fillStyle = grd;
+  g.fillRect(x - r, y - r, r * 2, r * 2);
+}
+
+/* ============================================================
+ * 4. 绘制
+ * ============================================================ */
+let lastDraw = 0;
+let lastFrameAt = 0;
+
+function sideTarget() {
+  const maxSide = Math.min(W, H) * .86;
+  return maxSide * Math.pow(2, state.order - state.rule.maxOrder);
+}
+
+function headIndex(points) {
+  if (state.playing && state.progress >= 0 && state.progress <= 1) {
+    return Math.min(points - 1, Math.max(0, Math.floor(state.progress * (points - 1))));
+  }
+  if (mic.active && mic.envLen > 0) return points - 1;
+  return -1;
+}
+
+function drawHilbert(time, points, env, dt) {
+  const target = sideTarget();
+  const k = 1 - Math.exp(-Math.max(0, dt) / .16);
+  state.sideShown += (target - state.sideShown) * k;
+  const size = state.sideShown;
+  const x0 = (W - size) / 2;
+  const y0 = (H - size) / 2;
+  const scale = Math.max(.34, size / 780);
+  const hilbert = getHilbert(state.order);
+  const px = new Float32Array(points);
+  const py = new Float32Array(points);
+  for (let i = 0; i < points; i++) {
+    px[i] = x0 + hilbert[i][0] * size;
+    py[i] = y0 + size - hilbert[i][1] * size;
+  }
+
+  const buckets = Array.from({ length: BUCKETS }, () => new Path2D());
+  const base = new Path2D();
+  for (let i = 0; i < points - 1; i++) {
+    base.moveTo(px[i], py[i]);
+    base.lineTo(px[i + 1], py[i + 1]);
+    const a = Math.max(0, Math.min(1, env[i] || 0));
+    const b = Math.min(BUCKETS - 1, Math.floor(Math.pow(a, .72) * BUCKETS));
+    buckets[b].moveTo(px[i], py[i]);
+    buckets[b].lineTo(px[i + 1], py[i + 1]);
+  }
+
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+
+  // 骨架：让静音段也有形状
+  ctx.strokeStyle = hsla(state.hue, state.sat, state.light, .06);
+  ctx.lineWidth = .8 * scale;
+  ctx.stroke(base);
+
+  // 振幅 → 线宽 / 亮度（分桶绘制）
+  for (let b = 0; b < BUCKETS; b++) {
+    const t = (b + 1) / BUCKETS;
+    const width = (.55 + 6.2 * Math.pow(t, 1.8)) * scale;
+    const alpha = .05 + .88 * t;
+    const light = Math.min(.82, state.light + (t - .55) * .16);
+    ctx.strokeStyle = hsla(state.hue, state.sat, light, alpha);
+    ctx.lineWidth = width;
+    ctx.stroke(buckets[b]);
+  }
+
+  // 高振幅段的即时辉光（阶数越高线越密，辉光相应收一点，避免整片发白）
+  const glowDensity = Math.min(1, 1400 / points);
+  ctx.globalCompositeOperation = "lighter";
+  for (let b = Math.floor(BUCKETS * .52); b < BUCKETS; b++) {
+    const t = (b + 1) / BUCKETS;
+    ctx.strokeStyle = hsla(state.hue, state.sat, Math.min(.85, state.light + .1), (.02 + .06 * t) * glowDensity);
+    ctx.lineWidth = (4 + 9 * t) * scale;
+    ctx.stroke(buckets[b]);
+  }
+
+  const hi = headIndex(points);
+  if (hi >= 0) {
+    const rad = Math.max(34, size * .075);
+    const grd = ctx.createRadialGradient(px[hi], py[hi], 0, px[hi], py[hi], rad);
+    grd.addColorStop(0, "rgba(255,255,255,.34)");
+    grd.addColorStop(.22, hsla(state.hue, state.sat, Math.min(.8, state.light + .18), .30));
+    grd.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = grd;
+    ctx.fillRect(px[hi] - rad, py[hi] - rad, rad * 2, rad * 2);
+    ctx.fillStyle = "rgba(255,255,255,.88)";
+    ctx.beginPath();
+    ctx.arc(px[hi], py[hi], Math.max(1.3, 1.8 * scale), 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalCompositeOperation = "source-over";
+
+  // ---- 伪视觉残留：只在"正在录/正在播"时写入高振幅段和头部 ----
+  if (mic.active || (state.playing && state.progress >= 0 && state.progress <= 1)) {
+    glowCtx.lineCap = "round";
+    glowCtx.lineJoin = "round";
+    for (let b = GLOW_START; b < BUCKETS; b++) {
+      const t = (b + 1) / BUCKETS;
+      glowCtx.strokeStyle = hsla(state.hue, state.sat, Math.min(.86, state.light + .1), .13 + .10 * t);
+      glowCtx.lineWidth = (1.8 + 5.2 * t) * scale;
+      glowCtx.stroke(buckets[b]);
+    }
+    if (hi >= 0) {
+      drawGlowDot(glowCtx, px[hi], py[hi], Math.max(30, size * .06), .42, .38);
+    }
+  }
+}
+
+function drawLinear(time, points, env) {
+  const left = 34, right = W - 34;
+  const mid = H / 2;
+  const maxH = Math.min(H * .34, 300);
+  const step = (right - left) / Math.max(1, points - 1);
+
+  const grad = ctx.createLinearGradient(left, 0, right, 0);
+  grad.addColorStop(0, hsla(state.hue, state.sat, state.light, .95));
+  grad.addColorStop(.5, hsla(state.hue, state.sat, Math.min(.82, state.light + .12), .95));
+  grad.addColorStop(1, hsla((state.hue + 28) % 360, state.sat, state.light, .95));
+
+  ctx.beginPath();
+  ctx.moveTo(left, mid);
+  for (let i = 0; i < points; i++) {
+    ctx.lineTo(left + i * step, mid - Math.max(1, (env[i] || 0) * maxH));
+  }
+  for (let i = points - 1; i >= 0; i--) {
+    ctx.lineTo(left + i * step, mid + Math.max(1, (env[i] || 0) * maxH));
+  }
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.globalAlpha = .88;
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  // 中线与刻度
+  ctx.strokeStyle = "rgba(255,255,255,.08)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(left, mid); ctx.lineTo(right, mid);
+  ctx.stroke();
+  for (let i = 0; i <= 8; i++) {
+    const x = left + (right - left) * i / 8;
+    ctx.strokeStyle = "rgba(255,255,255,.05)";
+    ctx.beginPath();
+    ctx.moveTo(x, mid - maxH - 12); ctx.lineTo(x, mid + maxH + 12);
+    ctx.stroke();
+  }
+
+  const hi = headIndex(points);
+  if (hi >= 0) {
+    const x = left + hi * step;
+    ctx.strokeStyle = "rgba(255,255,255,.75)";
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.moveTo(x, mid - maxH - 18); ctx.lineTo(x, mid + maxH + 18);
+    ctx.stroke();
+  }
+
+  // 线性模式的残影：仅在录音/播放时写入，上下包络线 + 播放头
+  if (mic.active || (state.playing && state.progress >= 0 && state.progress <= 1)) {
+    glowCtx.lineWidth = 1.5;
+    glowCtx.strokeStyle = hsla(state.hue, state.sat, Math.min(.85, state.light + .1), .10);
+    for (const sign of [-1, 1]) {
+      glowCtx.beginPath();
+      for (let i = 0; i < points; i++) {
+        const x = left + i * step;
+        const y = mid + sign * Math.max(1, (env[i] || 0) * maxH);
+        i === 0 ? glowCtx.moveTo(x, y) : glowCtx.lineTo(x, y);
+      }
+      glowCtx.stroke();
+    }
+    if (hi >= 0) {
+      const x = left + hi * step;
+      drawGlowDot(glowCtx, x, mid, 46, .28, .30);
+    }
+  }
+}
+
+function render(now) {
+  requestAnimationFrame(render);
+  if (now - lastDraw < 32) return;   // ~30fps，够用且不烧 CPU
+  lastDraw = now;
+
+  updateOrder();
+  const points = pointsFor(state.order);
+  const env = getEnvelope(points);
+  const dt = lastFrameAt ? Math.min(.25, (now - lastFrameAt) / 1000) : .033;
+  lastFrameAt = now;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // 背景里非常淡的一圈径向光，颜色跟随音色
+  const bg = ctx.createRadialGradient(W * .5, H * .46, 0, W * .5, H * .46, Math.max(W, H) * .62);
+  bg.addColorStop(0, hsla(state.hue, state.sat, state.light, .045));
+  bg.addColorStop(.55, "rgba(0,0,0,0)");
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  fadeGlow(dt);
+  if (state.mode === "linear") drawLinear(now, points, env);
+  else drawHilbert(now, points, env, dt);
+  compositeGlow();
+}
+
+
+/* ============================================================
+ * 5. 音频：播放 TTS + 包络
+ * ============================================================ */
+let audioCtx = null;
+function ac() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function envelopeFromBuffer(buffer, n) {
+  const data = buffer.getChannelData(0);
+  const win = Math.max(1, Math.floor(data.length / n));
+  const env = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    let m = 0;
+    const start = i * win, end = Math.min(data.length, start + win);
+    for (let j = start; j < end; j++) {
+      const v = Math.abs(data[j]);
+      if (v > m) m = v;
+    }
+    env[i] = m;
+  }
+  const sorted = Array.from(env).sort((a, b) => a - b);
+  const p95 = sorted[Math.floor((n - 1) * .95)] || 1e-6;
+  const scale = 1 / Math.max(1e-5, Math.min(p95, Math.max(...env)));
+  for (let i = 0; i < n; i++) env[i] = Math.min(1, env[i] * scale);
+  return env;
+}
+
+async function playWav(url, label) {
+  if (mic.active) stopMic();
+  state.epoch++;  // 旧录音的音色结果不再覆盖这次 TTS 颜色
+  const context = ac();
+  await context.resume();
+  let buffer;
+  try {
+    const res = await fetch(url);
+    const raw = await res.arrayBuffer();
+    buffer = await context.decodeAudioData(raw);
+  } catch (err) {
+    setStatus("音频解码失败：" + err.message);
+    return;
+  }
+  if (state.ttsSource) {
+    try { state.ttsSource.stop(); } catch (e) { /* 已结束 */ }
+    state.ttsSource = null;
+  }
+  state.ttsEnv = envelopeFromBuffer(buffer, MAX_ENV);
+  state.clipDur = buffer.duration;
+  state.source = "tts";
+  state.playing = true;
+  state.progress = 0;
+  state.playingLabel = label || "";
+  clearGlow();
+  updateOrder(true);
+
+  replayBtn.hidden = false;
+  replayBtn.dataset.url = url;
+
+  if (MUTE) {  // ?mute=1：只更新波形和颜色，不启动播放（无媒体管线，截图更稳）
+    state.playing = false;
+    state.progress = -1;
+    setStatus("已生成 · 静音预览 · " + (label || ""));
+    return;
+  }
+
+  const src = context.createBufferSource();
+  src.buffer = buffer;
+  const analyser = context.createAnalyser();
+  analyser.fftSize = 1024;
+  src.connect(analyser);
+  analyser.connect(context.destination);
+
+  const start = context.currentTime + .06;
+  src.start(start);
+  state.playStart = start;
+  state.playDur = buffer.duration;
+  state.ttsAnalyser = analyser;
+  state.ttsSource = src;
+
+  src.onended = () => {
+    if (state.ttsSource !== src) return; // 已被新的播放/录音接管
+    state.playing = false;
+    state.progress = -1;
+    state.ttsSource = null;
+    state.ttsAnalyser = null;
+    updateLevel(0);
+    setStatus((state.playingLabel ? "已播完 · " + state.playingLabel : "已播完") + " · 可重播");
+  };
+  setStatus("播放中 · " + (label || "TTS 语音"));
+}
+
+function updatePlayback() {
+  if (!state.playing || !audioCtx) return;
+  const p = (audioCtx.currentTime - state.playStart) / Math.max(1e-6, state.playDur);
+  state.progress = Math.max(0, Math.min(1, p));
+}
+
+/* ============================================================
+ * 6. 聊天
+ * ============================================================ */
+let busy = false;
+
+async function generate() {
+  const text = qEl.value.trim();
+  if (!text || busy) { qEl.focus(); return; }
+  if (mic.active) stopMic();   // 录音中发消息：先收掉麦克风，避免边录边播
+  // 在用户手势里先唤醒 AudioContext，避免后面异步播放被自动播放策略拦
+  try { await ac().resume(); } catch (e) { /* ignore */ }
+
+  busy = true;
+  sendBtn.disabled = true;
+  setStatus("生成中 · DeepSeek → Piper…");
+  timingsEl.textContent = "";
+  const t0 = performance.now();
+
+  try {
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text })
+    });
+    const data = await res.json();
+    if (!res.ok || data.error) throw new Error(data.error || ("HTTP " + res.status));
+
+    replyEl.textContent = data.reply || "（空回复）";
+    const parts = [];
+    if (data.first_token_ms != null) parts.push("首token " + Math.round(data.first_token_ms) + "ms");
+    if (data.llm_ms != null) parts.push("LLM " + data.llm_ms + "ms");
+    if (data.tts_ms != null) parts.push("合成 " + data.tts_ms + "ms");
+    if (data.timbre_ms != null) parts.push("音色 " + data.timbre_ms + "ms");
+    parts.push("端到端 " + Math.round(performance.now() - t0) + "ms");
+    timingsEl.textContent = parts.join(" · ");
+
+    state.epoch++;  // 让仍在路上的麦克风音色结果过期
+    if (data.timbre) applyTimbre(data.timbre, "tts");
+    if (data.audio) {
+      await playWav(data.audio, data.timbre ? data.timbre.label : "");
+    } else {
+      setStatus("回复为空，没有音频");
+    }
+  } catch (err) {
+    setStatus("请求失败：" + err.message);
+    replyEl.textContent = "";
+  } finally {
+    busy = false;
+    sendBtn.disabled = false;
+    qEl.focus();
+  }
+}
+
+/* ============================================================
+ * 7. 麦克风：只做音色分析，不做 ASR
+ * ============================================================ */
+const mic = {
+  active: false, stream: null, source: null, processor: null, mute: null,
+  nativeRate: 48000, buf: [], lastPost: 0, inFlight: false,
+  envHistory: new Float32Array(HISTORY_MAX), envLen: 0,
+  displayScale: 1, lastScaleAt: 0,
+  blockSum: 0, blockN: 0, blockSize: 240,
+  startedAt: 0, timer: null,
+};
+
+const ttsLevelBuf = new Uint8Array(1024);
+
+function updateMicScale(now) {
+  if (!mic.envLen) { mic.displayScale = 1; return; }
+  if (mic.lastScaleAt && now - mic.lastScaleAt < 180) return;
+  mic.lastScaleAt = now;
+  // 取 98 分位做增益，设备电平差 10 倍时波形也看得见
+  const stride = Math.max(1, Math.floor(mic.envLen / 2000));
+  const vals = [];
+  for (let i = 0; i < mic.envLen; i += stride) vals.push(mic.envHistory[i]);
+  vals.sort((a, b) => a - b);
+  const p = vals[Math.floor((vals.length - 1) * .98)] || 0;
+  const target = Math.min(32, .9 / Math.max(p, .0035));
+  mic.displayScale += (target - mic.displayScale) * .35;
+}
+
+function micLevel() {
+  const n = Math.min(40, mic.envLen); // 最近 200ms
+  if (!n) return 0;
+  let s = 0;
+  for (let i = mic.envLen - n; i < mic.envLen; i++) {
+    const v = mic.envHistory[i] * mic.displayScale;
+    s += v * v;
+  }
+  return Math.min(1, Math.sqrt(s / n));
+}
+
+function resample16k(x, srcRate) {
+  if (srcRate === 16000) return x;
+  const n = Math.max(1, Math.floor(x.length * 16000 / srcRate));
+  const out = new Float32Array(n);
+  const ratio = srcRate / 16000;
+  for (let i = 0; i < n; i++) {
+    const pos = i * ratio;
+    const i0 = Math.floor(pos);
+    const f = pos - i0;
+    const a = x[i0] || 0;
+    const b = x[Math.min(i0 + 1, x.length - 1)] || 0;
+    out[i] = a * (1 - f) + b * f;
+  }
+  return out;
+}
+
+function toPcm16(x) {
+  const out = new Int16Array(x.length);
+  for (let i = 0; i < x.length; i++) {
+    const v = Math.max(-1, Math.min(1, x[i]));
+    out[i] = v < 0 ? v * 0x8000 : v * 0x7fff;
+  }
+  return out;
+}
+
+function recentNative(seconds) {
+  const need = Math.floor(mic.nativeRate * seconds);
+  const out = new Float32Array(need);
+  let off = need;
+  for (let i = mic.buf.length - 1; i >= 0 && off > 0; i--) {
+    const b = mic.buf[i];
+    const take = Math.min(b.length, off);
+    off -= take;
+    out.set(b.subarray(b.length - take), off);
+  }
+  return out;
+}
+
+async function postTimbre(seconds) {
+  if (mic.inFlight || !mic.buf.length) return;
+  const native = recentNative(seconds || 2.2);
+  let peak = 0;
+  for (let i = 0; i < native.length; i++) peak = Math.max(peak, Math.abs(native[i]));
+  if (peak < .004) { setStatus("录音中 · 等待人声…"); return; }
+
+  const pcm = toPcm16(resample16k(native, mic.nativeRate));
+  const epoch = state.epoch;
+  mic.inFlight = true;
+  try {
+    const res = await fetch("/api/timbre", {
+      method: "POST",
+      headers: { "Content-Type": "application/octet-stream" },
+      body: pcm.buffer
+    });
+    const t = await res.json();
+    if (epoch !== state.epoch) return; // 期间切到了 TTS / 新录音，丢弃旧结果
+    if (t && !t.error) {
+      if (t.silent) setStatus("录音中 · 等待人声…");
+      else applyTimbre(t, "mic");
+    }
+  } catch (err) {
+    // 网络错误不打断录音；下一次分块会再试
+  } finally {
+    mic.inFlight = false;
+  }
+}
+
+async function startMic() {
+  try { await ac().resume(); } catch (e) { /* ignore */ }
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        channelCount: 1,
+        echoCancellation: false,
+        noiseSuppression: false,
+        autoGainControl: false,
+      }
+    });
+  } catch (err) {
+    const name = err && err.name ? err.name : "Error";
+    setStatus(name === "NotAllowedError"
+      ? "麦克风被拒绝：请在地址栏允许，或改用 http://127.0.0.1 打开"
+      : "无法打开麦克风：" + name);
+    return;
+  }
+
+  // 停掉正在播的 TTS，避免录进去
+  if (state.ttsSource) {
+    try { state.ttsSource.stop(); } catch (e) { /* ignore */ }
+    state.ttsSource = null;
+    state.ttsAnalyser = null;
+    state.playing = false;
+    state.progress = -1;
+  }
+
+  const context = ac();
+  mic.nativeRate = context.sampleRate;
+  mic.stream = stream;
+  mic.source = context.createMediaStreamSource(stream);
+  mic.processor = context.createScriptProcessor(2048, 1, 1);
+  mic.mute = context.createGain();
+  mic.mute.gain.value = 0;   // 不把麦克风回放到扬声器，避免啸叫
+
+  mic.source.connect(mic.processor);
+  mic.processor.connect(mic.mute);
+  mic.mute.connect(context.destination);
+  mic.buf = [];
+  mic.envLen = 0;
+  mic.displayScale = 1;
+  mic.lastScaleAt = 0;
+  mic.blockSum = 0;
+  mic.blockN = 0;
+  mic.blockSize = Math.max(1, Math.round(mic.nativeRate / HISTORY_HZ)); // 5ms 一格
+  state.epoch++;              // 上一次录音的迟到结果作废
+  mic.startedAt = performance.now();
+  mic.lastPost = 0;
+  mic.active = true;
+
+  mic.processor.onaudioprocess = (e) => {
+    if (!mic.active) return;
+    const input = e.inputBuffer.getChannelData(0);
+    mic.buf.push(new Float32Array(input));
+    // 逐样本切成 5ms 块，累计整段录音的音量包络（不是只画当前一帧）
+    for (let i = 0; i < input.length; i++) {
+      const v = input[i];
+      mic.blockSum += v * v;
+      mic.blockN++;
+      if (mic.blockN >= mic.blockSize) {
+        if (mic.envLen < HISTORY_MAX) {
+          mic.envHistory[mic.envLen++] = Math.sqrt(mic.blockSum / mic.blockN);
+        }
+        mic.blockSum = 0;
+        mic.blockN = 0;
+      }
+    }
+    // 最多留 20 秒
+    let total = 0;
+    for (let i = mic.buf.length - 1; i >= 0; i--) {
+      total += mic.buf[i].length;
+      if (total > mic.nativeRate * 20) {
+        mic.buf.splice(0, i + 1);
+        break;
+      }
+    }
+    const now = performance.now();
+    if (now - mic.lastPost > 700 && total > mic.nativeRate * .5) {
+      mic.lastPost = now;
+      postTimbre(2.2);
+    }
+  };
+
+  // 干净的起点：从下限阶数的中心种子开始，随录音时长向外扩
+  state.source = "mic";
+  state.playing = false;
+  state.progress = -1;
+  updateOrder(true);
+  state.sideShown = sideTarget(); // 不在录音开始时从整屏反向收缩，直接落在种子尺寸
+  clearGlow();
+  stage.classList.add("rec");
+  micBtn.classList.add("on");
+  micLabel.textContent = "停止录音";
+  setStatus("录音中 · 阶数随时长从中心扩展（无 ASR）");
+  updateLevel(0);
+
+  mic.timer = setInterval(() => {
+    if (!mic.active) return;
+    const sec = ((performance.now() - mic.startedAt) / 1000).toFixed(1);
+    setStatus(`录音中 · ${sec}s · 音量 → 波形，音色 → 颜色`);
+  }, 500);
+
+  // 20 秒自动停，防止一直占着麦克风
+  setTimeout(() => { if (mic.active && performance.now() - mic.startedAt > 20000) stopMic(); }, 20500);
+}
+
+function stopMic(final = true) {
+  if (!mic.active) return;
+  mic.active = false;
+  if (mic.timer) { clearInterval(mic.timer); mic.timer = null; }
+  if (final) postTimbre(2.5);   // 用最后 2.5 秒刷新一次颜色
+
+  try { mic.processor.onaudioprocess = null; } catch (e) { /* ignore */ }
+  for (const node of [mic.processor, mic.source, mic.mute]) {
+    try { node && node.disconnect(); } catch (e) { /* ignore */ }
+  }
+  if (mic.stream) mic.stream.getTracks().forEach(t => t.stop());
+  mic.stream = null;
+  mic.source = null;
+  mic.processor = null;
+  mic.mute = null;
+  updateOrder(true);   // 冻结在最终阶数：历史包络还在，画面不塌回中心
+
+  stage.classList.remove("rec");
+  micBtn.classList.remove("on");
+  micLabel.textContent = "录音分析音色";
+  updateLevel(0);
+  setStatus(`已停止录音 · ORDER ${state.order} · 可改阶数规则查看重排`);
+}
+
+function toggleMic() {
+  if (mic.active) stopMic();
+  else startMic();
+}
+
+/* ============================================================
+ * 8. 主循环 / 事件
+ * ============================================================ */
+function tick(now) {
+  if (mic.active) {
+    updateMicScale(now);
+    updateLevel(micLevel());
+  } else if (state.playing) {
+    updatePlayback();
+    if (state.ttsAnalyser) {
+      state.ttsAnalyser.getByteTimeDomainData(ttsLevelBuf);
+      let s = 0;
+      for (let i = 0; i < ttsLevelBuf.length; i++) {
+        const v = (ttsLevelBuf[i] - 128) / 128;
+        s += v * v;
+      }
+      updateLevel(Math.sqrt(s / ttsLevelBuf.length));
+    }
+  }
+  requestAnimationFrame(tick);
+}
+
+document.querySelectorAll(".modes button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".modes button").forEach(b => b.classList.remove("on"));
+    btn.classList.add("on");
+    state.mode = btn.dataset.mode;
+    updateStageBadge();
+    clearGlow();
+  });
+});
+
+/* ---- 阶数规则控件（下限 / 上限 / 每阶秒数）---- */
+function populateOrderOptions() {
+  for (let i = 1; i <= MAX_ORDER; i++) {
+    for (const sel of [minOrderEl, maxOrderEl]) {
+      const opt = document.createElement("option");
+      opt.value = String(i);
+      opt.textContent = String(i);
+      sel.appendChild(opt);
+    }
+  }
+}
+
+function saveRule() {
+  try { localStorage.setItem(RULE_KEY, JSON.stringify(state.rule)); } catch (e) { /* ignore */ }
+}
+
+function syncRuleUI() {
+  minOrderEl.value = String(state.rule.minOrder);
+  maxOrderEl.value = String(state.rule.maxOrder);
+  stepSecEl.value = String(state.rule.step);
+  stepValEl.textContent = `${state.rule.step.toFixed(1)}s`;
+  saveRule();
+  updateOrder(true);
+}
+
+minOrderEl.addEventListener("change", () => {
+  state.rule.minOrder = clampInt(minOrderEl.value, 1, MAX_ORDER, state.rule.minOrder);
+  if (state.rule.minOrder > state.rule.maxOrder) state.rule.maxOrder = state.rule.minOrder;
+  syncRuleUI();
+});
+
+maxOrderEl.addEventListener("change", () => {
+  state.rule.maxOrder = clampInt(maxOrderEl.value, 1, MAX_ORDER, state.rule.maxOrder);
+  if (state.rule.maxOrder < state.rule.minOrder) state.rule.minOrder = state.rule.maxOrder;
+  syncRuleUI();
+});
+
+stepSecEl.addEventListener("input", () => {
+  state.rule.step = Math.max(.5, Math.min(5, Number(stepSecEl.value) || 2));
+  stepValEl.textContent = `${state.rule.step.toFixed(1)}s`;
+  saveRule();
+  updateOrder(true);
+});
+
+sendBtn.addEventListener("click", generate);
+qEl.addEventListener("keydown", e => { if (e.key === "Enter") generate(); });
+micBtn.addEventListener("click", toggleMic);
+replayBtn.addEventListener("click", () => {
+  const url = replayBtn.dataset.url;
+  if (url) playWav(url, state.playingLabel);
+});
+
+// 页面可见性：切走时停掉麦克风，别让录音指示灯一直亮
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden && mic.active) stopMic();
+});
+
+populateOrderOptions();
+syncRuleUI();
+requestAnimationFrame(render);
+requestAnimationFrame(tick);
+qEl.focus();
+</script>
+</body>
+</html>

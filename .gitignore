@@ -41,3 +41,8 @@ dist/
 Thumbs.db
 desktop.ini
 ~$*
+
+# ---- VoxDesk-Web runtime ----
+out/
+data/
+*.log

@@ -1,91 +1,84 @@
-# AGENTS.md · 代码仓操作规约
+# AGENTS.md · VoxDesk-Web 操作规约
 
-> 给进入**代码仓**（`D:\VoxDesk`）的编码 agent。先读根 `README.md`，再读本文件。
-> 设计侧的规约（文档格式、ID、ADR 生命周期）在文档仓的 `AGENTS.md` + `docs/00-spec.md`，不在这里重复。
+> 给**没有上下文的新对话**用。先读 `README.md`，再按下面顺序读四份文档，然后就能开工。
 
 ## 1. 这个仓库是什么
 
-- **只放能跑的代码**：`tts/`（播报）、`audio/`（音频前端）、`docs/`（实现文档）。
-- `demo/` 只存在于分支 `demo/deepseek-voice`，是"一轮对话 + 打包"的演示，**不并入主线**。
-- 权威在代码本身：文档写的是"当前代码长什么样"，代码变了文档必须跟着改（顺序见 §4）。
+- **浏览器版语音对话应用**，目标是快速演示，**不是**原框架的正式实现。
+- 原框架在 `D:\VoxDesk`（另有系统文档仓），**外部目录只读**；本仓库已把 `tts/`、`audio/`
+  的源码与所需模型合并进来（模型本地复制但 gitignore）。
+- 允许“先跑通、后补设计”；新目录/新模块优先保持轻量，不要整仓复制外部内容。
 
-## 2. 入口（按顺序读）
+## 2. 入口（按顺序读，约 10 分钟）
 
-| 顺序 | 文件 | 读它解决什么 |
+| 顺序 | 文件 | 解决什么 |
 | --- | --- | --- |
-| 1 | `README.md` | 项目是什么、能做什么、怎么跑 |
-| 2 | `docs/STATUS.md` | 做到哪了、数字是多少、下一步做什么 |
-| 3 | `docs/ARCHITECTURE.md` | 模块、接口、不变式、扩展点 |
-| 4 | `docs/HANDOFF.md` | 已知的 8 个坑、未决问题、交接检查清单 |
+| 1 | `README.md` | 是什么、怎么跑 |
+| 2 | `docs/ARCHITECTURE.md` | 当前数据流、接口、存储、线程模型 |
+| 3 | `docs/STATUS.md` | 现在能跑什么、数字是多少、缺什么 |
+| 4 | `docs/PITFALLS.md` | 46 个坑，别重踩 |
+| 5 | `docs/PLAN.md` | 下一步做什么、怎么算做完 |
 
-## 3. 工作规则
+## 3. 硬约束（改代码前必须知道）
 
-### 3.1 分支
+1. **采样率 16k、单声道、float32/Int16**：进 `voxdesk_audio.StreamingASR` 的数据必须是 16k 单声道。
+2. **WAV 是边界**：TTS 只产出文件，播放由浏览器负责；服务端不播声音。
+3. **音频/TTS 源码在本仓库**：`audio/src`、`tts/src` 保持原模块名与布局；模型在
+   `audio/models`、`tts/models`（gitignore）。外部 `D:\VoxDesk` 只读，不再作为运行源码路径。
+4. **Piper 引擎非线程安全**：`voice_app.py` 用 `_tts_lock` 串行化 `synth()`，别去掉。
+5. **依赖环境**：优先本仓库 `.venv`；没有则复用 `D:\VoxDesk\demo\.venv`（含 sherpa-onnx / piper / soundcard）。
+6. **密钥不进仓库**：`.env` 在 `.gitignore` 里；本目录 `.env` 优先，`D:\VoxDesk\demo\.env` 兜底。
 
-| 分支 | 用途 | 提交到哪 |
-| --- | --- | --- |
-| `master` | 主线（离线，本地 LLM） | 新功能 / 修复 |
-| `demo/deepseek-voice` | 演示（云端 LLM + 打包） | 只改 `demo/` 与相关文档 |
+## 4. 验证（不用打开浏览器也能测）
 
-- 不要为了让 demo 能跑而改 `audio/` 或 `tts/` 的公共接口；接口要改，先在主线改并跑验收。
-- 合并演示分支进主线是**禁止动作**，除非需求方明确同意。
+```powershell
+# 起服务（模型在本地，首次约 5s 预热）
+cd D:\VoxDesk-Web; .\start.ps1
 
-### 3.2 提交
+# 健康检查 & 文字对话
+Invoke-RestMethod "http://127.0.0.1:8800/api/health" | ConvertTo-Json
+$body = @{ text = "你好"; web = $false; speak = $true } | ConvertTo-Json -Compress
+Invoke-RestMethod "http://127.0.0.1:8800/api/chat" -Method Post `
+  -ContentType "application/json; charset=utf-8" `
+  -Body ([Text.Encoding]::UTF8.GetBytes($body))
+# 期望：reply 非空、audio 是 /api/wav/xxx.wav、llm_ms/tts_ms 有值
+
+# 会话
+Invoke-RestMethod "http://127.0.0.1:8800/api/chats" | ConvertTo-Json -Depth 3
+
+# 页面
+Invoke-WebRequest "http://127.0.0.1:8800/" -UseBasicParsing | Select-Object StatusCode
+```
+
+改完必须给出**新的实测数字**（ASR / LLM / TTS 或页面延迟），否则不算完成。
+
+## 5. 提交与版本
 
 ```
-<type>(<scope>): <中文摘要> @ <ISO8601>
-type ∈ feat / fix / docs / test / build / chore
-scope ∈ tts / audio / demo / docs
+w0.x: <一句话> @ <ISO8601>
 ```
 
-- 一次提交只做一件事；正文写清"为什么"，不写"改了什么"（diff 已经说了）。
-- 禁止 `git add -A` / `git add .`：仓库里有模型、密钥、构建产物，误收代价很大。
-- 提交前必须 `git status` 确认没有 `models/`、`.env`、`VoxDeskVoice/`、`*.wav` 混进来。
+- 每完成一个可演示的步骤打一个 tag（`w0.1`、`w0.2`…），保留"哪一步是能跑的"。
+- 一次提交只做一件事；不要把 `out/`、`data/`、`.env`、`*.wav`、模型带进去。
+- 禁止 `git add -A`。
 
-### 3.3 验证
+## 6. 文档同步（唯一要求）
 
-| 改动 | 必须跑 |
+改动若涉及下列任一项，**同一次提交里**更新对应文档，否则下个对话会读到错的：
+
+| 改了 | 更新 |
 | --- | --- |
-| `tts/` | `cd tts && uv run pytest -q`（13 个）+ `uv run python scripts/accept_s1.py --engine piper` |
-| `audio/` | `cd audio && uv run pytest -q`（15 个）+ `uv run python scripts/accept_s3.py` |
-| `demo/` | `cd demo && uv run python scripts/voice_chat.py --file ..\audio\out\corpus\01.wav --mock` |
-| 打包相关 | `cd demo && .\build.ps1`，再双击 `..\VoxDeskVoice\VoxDeskVoice.exe` 验一次 |
+| 接口（`/api/*`）或数据流 | `docs/ARCHITECTURE.md` §4 |
+| 能跑的功能 / 实测数字 | `docs/STATUS.md` |
+| 踩到新坑或绕过旧坑 | `docs/PITFALLS.md` |
+| 计划增减 | `docs/PLAN.md` |
 
-没有实测数字的改动**不算完成**；性能相关的改动要在提交信息里写"改前/改后"。
-
-## 4. 文档同步顺序
-
-1. 改代码；
-2. 改对应切片 `README.md`（若有接口/用法变化）；
-3. 改 `docs/STATUS.md` 的数字或状态；
-4. 若结构/接口变了，改 `docs/ARCHITECTURE.md`；
-5. 若踩到新坑或解决旧坑，改 `docs/HANDOFF.md`；
-6. 提交。
-
-## 5. 禁止事项
+## 7. 禁止事项
 
 | 禁止 | 原因 |
 | --- | --- |
-| 提交模型权重（`*.onnx`、`models/`） | 单文件 157.8MB 超 GitHub 限制；`.gitignore` 已挡 |
-| 提交 `demo/.env` 或任何密钥 | 会泄露；`.gitignore` 已挡，别用 `-f` 绕过 |
-| 提交 `VoxDeskVoice/`、`build/`、`*.wav`、`*.mp4` | 构建/运行产物，体积大 |
-| 改 `audio/`/`tts/` 的公共接口只为适配 demo | 会让切片失去独立性 |
-| 用 `python` 直接跑（PATH 上没有） | 一律 `uv run` |
-| 在 `tts` 里写播放逻辑 | 违反"引擎不播放"不变式 |
-
-## 6. 环境
-
-- Windows 11 + PowerShell（5.1 与 7 都要能跑）。
-- 脚本文件若含中文，**必须存 UTF-8 with BOM**（PS 5.1 否则乱码并可能吞行）。
-- `uv` 管依赖；每个切片独立虚拟环境；`demo` 通过 path 依赖引用 `audio` / `tts`。
-- 模型下载：`cd demo && uv run python scripts\fetch_models.py`（hf-mirror 优先）。
-
-## 7. 交接要求
-
-任何一次"阶段性完成"的提交，必须能让下一个人只读三个文件就接手：
-
-1. `docs/STATUS.md` 的状态表是新的；
-2. `docs/HANDOFF.md` 的坑表包含这次踩到的坑；
-3. `docs/ARCHITECTURE.md` 的接口与不变式仍然成立。
-
-做不到就别提交。
+| 修改 `D:\VoxDesk` 里的代码 | 那是原框架，回填要单独评估 |
+| 引入前端框架 / 构建工具 | 目标是无构建静态页面（app.html/css/js） |
+| 引入 Python Web 框架（FastAPI 等） | 标准库够用；装包会拖慢迭代 |
+| 提交模型 / 大二进制 | 模型已本地复制但 gitignore，不要提交 |
+| 提交 `.env`、`out/`、`data/`、`*.wav` | 密钥与运行产物 |

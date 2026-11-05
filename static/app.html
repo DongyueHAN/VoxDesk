@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>VoxDesk · 语音对话</title>
+<link rel="stylesheet" href="/app.css" />
+</head>
+<body>
+<div class="app" id="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand-row">
+      <div class="brand"><span class="brand-mark"></span>VoxDesk<span class="brand-en">VOICE</span></div>
+      <button class="icon-btn mobile-only" id="closeSidebar" title="关闭">×</button>
+    </div>
+
+    <button class="new-chat" id="newChat"><span>＋</span> 新对话</button>
+
+    <div class="mode-switch" id="modeSwitch">
+      <button data-mode="general" class="on">通用</button>
+      <button data-mode="companion">陪伴</button>
+    </div>
+
+    <div class="section-head"><span>最近对话</span><b id="activeCount">0/30</b></div>
+    <div class="chat-list" id="chatList"></div>
+
+    <div class="section-head archive-head"><span>归档</span><b id="archiveCount">0/100</b></div>
+    <div class="chat-list archive" id="archiveList"></div>
+
+    <div class="sidebar-foot">
+      <div id="storageText">0 KB · 单会话上限 1MB</div>
+      <div class="foot-links">
+        <a href="/voice" target="_blank" rel="noreferrer">声纹可视化 ↗</a>
+        <button id="healthBtn" class="link-btn">服务状态</button>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="title-wrap">
+        <button class="icon-btn mobile-only" id="openSidebar" title="会话列表">☰</button>
+        <h1 id="chatTitle">新对话</h1>
+        <span class="mode-badge" id="modeBadge">通用模式</span>
+        <span class="readonly-badge" id="readonlyBadge" hidden>已归档 · 只读</span>
+      </div>
+      <div class="top-actions">
+        <label class="switch" title="允许模型调用 web_search / web_fetch 实时检索">
+          <input type="checkbox" id="webToggle" checked /><span class="switch-track"></span><span>联网</span>
+        </label>
+        <label class="switch" title="回答默认朗读；关闭后不再合成语音">
+          <input type="checkbox" id="ttsToggle" checked /><span class="switch-track"></span><span>朗读</span>
+        </label>
+        <button class="stop-btn" id="stopTTS" hidden>■ 停止</button>
+        <a class="ghost-btn" href="/voice" target="_blank" rel="noreferrer">声纹</a>
+      </div>
+    </header>
+
+    <section class="messages" id="messages">
+      <div class="welcome" id="welcome">
+        <div class="welcome-orb"></div>
+        <h2>今天想聊点什么？</h2>
+        <p id="welcomeSub">输入文字，或按住 F2 说话；按 F3 开始/停止桌面音频。回答默认朗读。</p>
+        <div class="suggestions" id="suggestions">
+          <button data-text="现在是北京时间几点？">现在几点？</button>
+          <button data-text="用三句话介绍一下你自己">介绍一下你自己</button>
+          <button data-text="帮我整理一下今天的待办">整理待办</button>
+        </div>
+        <div class="welcome-note">会话保存在本机 <code>data/</code>；实时信息由 DeepSeek 联网工具获取。</div>
+      </div>
+      <div class="messages-inner" id="log"></div>
+    </section>
+
+    <footer class="composer-wrap">
+      <div class="voice-panel" id="voicePanel" hidden>
+        <span class="voice-dot"></span>
+        <span id="voiceText">正在听…</span>
+        <b id="voiceTimer">0.0s</b>
+      </div>
+      <div class="composer" id="composer">
+        <textarea id="textInput" rows="1" placeholder="发消息，Enter 发送，Shift+Enter 换行…"></textarea>
+        <div class="composer-actions">
+          <button class="round-btn mic" id="micBtn" title="按住 F2 说话，或点击开始/停止">
+            <span class="mic-glyph"></span><span class="round-label">语音</span>
+          </button>
+          <button class="round-btn desktop" id="desktopBtn" title="F3 开始/停止桌面音频，或点击开始/停止">
+            <span class="desktop-glyph"></span><span class="round-label">桌面</span>
+          </button>
+          <button class="send-btn" id="sendBtn" title="发送">发送</button>
+        </div>
+      </div>
+      <div class="hints">
+        <span>Enter 发送 · Shift+Enter 换行</span>
+        <span>F2 按住麦克风 · F3 开始/停止桌面录音 · 仅页面聚焦时</span>
+        <span id="connState">联网工具 · 就绪</span>
+      </div>
+      <div class="toast" id="toast" hidden></div>
+    </footer>
+  </main>
+</div>
+
+<audio id="player" preload="auto"></audio>
+<script src="/app.js"></script>
+</body>
+</html>

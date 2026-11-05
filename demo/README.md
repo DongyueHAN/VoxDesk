@@ -69,10 +69,22 @@ flowchart LR
 
 ```powershell
 cd D:\VoxDesk\demo
-uv sync          # 会把 audio / tts 两个切片作为本地依赖一起装
+uv sync                              # 会把 audio / tts 两个切片作为本地依赖一起装
+uv run python scripts/fetch_models.py   # 下载模型（约 290MB）
 ```
 
-模型放在各自切片里（`audio/models/`、`tts/models/`），`uv sync` 不会下载它们——缺了会提示路径与下载链接。
+模型不随仓库分发（`.gitignore` 已忽略），因为 ASR 的 `encoder.int8.onnx` 有 157.8MB，
+超过 GitHub 单文件 100MB 硬限制。下载脚本的行为：
+
+| 项 | 说明 |
+| --- | --- |
+| 下载源 | 默认 `hf-mirror.com`，失败自动切 `huggingface.co`；VAD 走 jsDelivr |
+| 大小 | VAD 2.3MB · ASR 226MB · Piper 60MB ≈ 290MB |
+| 实测 | hf-mirror 约 **4.9MB/s**，Piper 60MB 用了 12 秒 |
+| 已存在 | 自动跳过；要重下加 `--force` |
+| 只下一部分 | `--what vad` / `--what asr` / `--what tts` |
+
+模型落到各自切片：`audio/models/`、`tts/models/`。
 
 ### 配置密钥（三选一）
 

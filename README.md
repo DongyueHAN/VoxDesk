@@ -25,6 +25,7 @@ git clone https://github.com/DongyueHAN/VoxDesk.git
 cd VoxDesk\demo
 
 uv sync                                         # 装依赖（自动装 Python 3.11）
+uv run python scripts/fetch_models.py           # 下载模型（约 290MB，只下一次）
 Copy-Item .env.example .env                     # 填 DEEPSEEK_API_KEY=
 uv run python scripts/voice_chat.py             # 按住 F2 说话
 ```
@@ -80,7 +81,7 @@ flowchart LR
 | Python | 3.11（`uv` 自动安装） |
 | 硬件 | 有麦克风即可，CPU 跑得动 |
 | 网络 | 只有调 API 时需要；`--mock` 完全离线 |
-| 磁盘 | 源码 + 模型约 400MB；打包产物 464MB |
+| 磁盘 | 源码 33MB + 模型 290MB；打包产物 464MB（模型内置） |
 
 ## 打包成免安装应用
 

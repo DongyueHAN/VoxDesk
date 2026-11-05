@@ -63,4 +63,4 @@
 3. **多轮**：把 `VoiceChat.history` 换成摘要 + 窗口。
 4. **补测试**：`demo` 用假 LLM + 假 TTS 跑通 `handle_audio`。
 
-每项的验收口径与预算见文档仓 `docs/13-M2process.md`。
+每项的验收口径与预算见文档仓 `docs/08-M2process.md`。

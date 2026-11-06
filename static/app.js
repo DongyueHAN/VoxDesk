@@ -37,26 +37,85 @@ const EMOTES = {
   sorry: { src: "/static/emotes/sorry.png", caption: "对不起…" },
 };
 
+const emoteCache = new Map();
+let emoteRenderSeq = 0;
+
 function emoteFromEmotion(emotion) {
   return String(emotion || "").toLowerCase() === "negative" ? "sorry" : "happy";
+}
+
+function loadEmoteImage(src) {
+  if (emoteCache.has(src)) return Promise.resolve(emoteCache.get(src));
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      emoteCache.set(src, img);
+      resolve(img);
+    };
+    img.onerror = () => reject(new Error(`emote load failed: ${src}`));
+    img.src = src;
+  });
+}
+
+function themeAccent() {
+  const value = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim();
+  return value || "#4d6bfe";
+}
+
+async function drawEmotePixels(kind) {
+  const seq = ++emoteRenderSeq;
+  const data = EMOTES[kind] || EMOTES.default;
+  try {
+    const img = await loadEmoteImage(data.src);
+    if (seq !== emoteRenderSeq) return;
+    const canvas = $("emoteCanvas");
+    if (!canvas) return;
+
+    // 只提取 PNG 里的近白像素，再按主题色画成点阵。
+    const source = document.createElement("canvas");
+    source.width = img.naturalWidth;
+    source.height = img.naturalHeight;
+    const sctx = source.getContext("2d", { willReadFrequently: true });
+    sctx.clearRect(0, 0, source.width, source.height);
+    sctx.drawImage(img, 0, 0);
+    const pixels = sctx.getImageData(0, 0, source.width, source.height).data;
+
+    const scale = 4;
+    canvas.width = source.width * scale;
+    canvas.height = source.height * scale;
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.imageSmoothingEnabled = false;
+    ctx.fillStyle = themeAccent();
+
+    for (let y = 0; y < source.height; y++) {
+      for (let x = 0; x < source.width; x++) {
+        const i = (y * source.width + x) * 4;
+        const a = pixels[i + 3];
+        if (a < 48) continue;
+        const r = pixels[i];
+        const g = pixels[i + 1];
+        const b = pixels[i + 2];
+        if (r < 180 || g < 180 || b < 180) continue;
+        // 留 1px 间隙，形成可辨认的像素点阵。
+        ctx.fillRect(x * scale + 1, y * scale + 1, scale - 1, scale - 1);
+      }
+    }
+  } catch (err) {
+    console.warn(err);
+  }
 }
 
 function setEmote(kind) {
   const next = EMOTES[kind] ? kind : "default";
   const data = EMOTES[next];
-  const img = $("emoteImage");
+  const canvas = $("emoteCanvas");
   const cap = $("emoteCaption");
-  if (!img || !cap) return;
+  if (!canvas || !cap) return;
   state.emote = next;
-  if (img.getAttribute("src") !== data.src) {
-    img.classList.add("swap");
-    setTimeout(() => {
-      img.src = data.src;
-      img.alt = data.caption;
-      img.classList.remove("swap");
-    }, 110);
-  }
   cap.textContent = data.caption;
+  canvas.setAttribute("aria-label", data.caption);
+  drawEmotePixels(next);
 }
 
 function escapeHtml(s) {

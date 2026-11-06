@@ -284,36 +284,15 @@ h1 { margin: 0; font-size: 15px; font-weight: 650; white-space: nowrap; overflow
   padding-bottom: 150px;
 }
 .app.companion .companion-stage { display: flex; }
-.emote-frame {
-  width: clamp(168px, 20vw, 248px); aspect-ratio: 1 / 1;
-  display: grid; place-items: center; position: relative;
-  background-color: #0d1424;
-  background-image:
-    linear-gradient(rgba(100, 126, 185, .10) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(100, 126, 185, .10) 1px, transparent 1px);
-  background-size: 12px 12px;
-  border: 2px solid #263453;
-  border-radius: 18px;
-  box-shadow: 0 0 0 5px rgba(77, 107, 254, .07), 0 24px 70px rgba(10, 18, 35, .22);
+.emote-canvas {
+  width: clamp(190px, 22vw, 300px); height: auto;
   image-rendering: pixelated;
+  opacity: .96;
+  filter: drop-shadow(0 18px 34px rgba(77, 107, 254, .22));
 }
-.emote-frame::before,
-.emote-frame::after {
-  content: ""; position: absolute; width: 7px; height: 7px;
-  border: 2px solid #4d6bfe; opacity: .75;
-}
-.emote-frame::before { left: 10px; top: 10px; border-right: 0; border-bottom: 0; }
-.emote-frame::after { right: 10px; bottom: 10px; border-left: 0; border-top: 0; }
-.emote-frame img {
-  width: 72%; height: 72%; object-fit: contain;
-  image-rendering: pixelated;
-  filter: drop-shadow(0 0 10px rgba(180, 205, 255, .22));
-  transition: opacity .16s ease, transform .16s ease;
-}
-.emote-frame img.swap { opacity: .2; transform: scale(.92); }
 .emote-caption {
-  margin-top: 14px; color: #5b6b86; font-size: 11px;
-  letter-spacing: .12em; font-family: var(--mono);
+  margin-top: 16px; color: var(--accent); font-size: 11px;
+  letter-spacing: .12em; font-family: var(--mono); opacity: .9;
 }
 .app.companion .welcome { display: none; }
 .app.companion .sidebar { background: #fbfbfd; }

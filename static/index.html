@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>VoxDesk Web</title>
+<style>
+  :root { --bg:#0e1626; --card:#16213a; --line:#24304d; --text:#e8eefc; --dim:#8fa1c0; --accent:#ffb454; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text);
+         font: 15px/1.6 "Segoe UI", "Microsoft YaHei", system-ui, sans-serif; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 28px 20px 120px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .sub { color: var(--dim); font-size: 13px; margin-bottom: 20px; }
+  .sub a { color: var(--accent); text-decoration: none; }
+  .sub a:hover { text-decoration: underline; }
+  #log { display:flex; flex-direction:column; gap:12px; min-height: 30vh; }
+  .msg { padding: 10px 14px; border-radius: 12px; max-width: 85%; white-space: pre-wrap; }
+  .me { align-self:flex-end; background:#23406b; }
+  .bot { align-self:flex-start; background:var(--card); border:1px solid var(--line); }
+  .bot.pending { color: var(--dim); }
+  .meta { font-size: 12px; color: var(--dim); margin-top: 4px; }
+  .bar { position: fixed; left:0; right:0; bottom:0; background:rgba(14,22,38,.95);
+         border-top:1px solid var(--line); padding: 14px 20px; }
+  .row { max-width:760px; margin:0 auto; display:flex; gap:10px; }
+  input[type=text] { flex:1; padding: 11px 14px; border-radius: 10px; border:1px solid var(--line);
+                     background:#0b1424; color:var(--text); font-size:15px; outline:none; }
+  input[type=text]:focus { border-color:#3a5a92; }
+  button { padding: 11px 18px; border-radius:10px; border:0; background:var(--accent);
+           color:#1a1205; font-weight:600; cursor:pointer; }
+  button:disabled { opacity:.5; cursor:default; }
+  .hint { max-width:760px; margin:8px auto 0; font-size:12px; color:var(--dim); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>VoxDesk Web</h1>
+  <div class="sub">文字 → DeepSeek → Piper 播报（今晚第一版，只跑通链路） · <a href="/voice">声纹可视化 →</a></div>
+  <div id="log"></div>
+</div>
+
+<div class="bar">
+  <div class="row">
+    <input id="q" type="text" placeholder="说点什么，回车发送…" autocomplete="off" />
+    <button id="send">发送</button>
+  </div>
+  <div class="hint">语音输入（麦克风 → ASR）下一版接入；现在先用文字验证链路。</div>
+</div>
+
+<script>
+const log = document.getElementById('log');
+const q = document.getElementById('q');
+const send = document.getElementById('send');
+let busy = false;
+
+function bubble(text, cls) {
+  const el = document.createElement('div');
+  el.className = 'msg ' + cls;
+  el.textContent = text;
+  log.appendChild(el);
+  el.scrollIntoView({behavior:'smooth', block:'end'});
+  return el;
+}
+
+async function ask() {
+  const text = q.value.trim();
+  if (!text || busy) return;
+  busy = true; send.disabled = true; q.value = '';
+  bubble(text, 'me');
+  const thinking = bubble('…', 'bot pending');
+  const t0 = performance.now();
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({text})
+    });
+    const data = await res.json();
+    const ms = Math.round(performance.now() - t0);
+    thinking.remove();
+    if (data.error) { bubble('⚠ ' + data.error, 'bot'); return; }
+    const b = bubble(data.reply || '（空回复）', 'bot');
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    const parts = [];
+    if (data.first_token_ms) parts.push('首token ' + Math.round(data.first_token_ms) + 'ms');
+    if (data.llm_ms != null) parts.push('LLM ' + data.llm_ms + 'ms');
+    if (data.tts_ms != null) parts.push('合成 ' + data.tts_ms + 'ms');
+    parts.push('端到端 ' + ms + 'ms');
+    meta.textContent = parts.join(' · ');
+    b.appendChild(meta);
+    if (data.audio) {
+      const a = new Audio(data.audio);
+      a.play().catch(() => {});
+    }
+  } catch (e) {
+    thinking.remove();
+    bubble('⚠ 请求失败：' + e, 'bot');
+  } finally {
+    busy = false; send.disabled = false; q.focus();
+  }
+}
+
+send.addEventListener('click', ask);
+q.addEventListener('keydown', e => { if (e.key === 'Enter') ask(); });
+q.focus();
+</script>
+</body>
+</html>

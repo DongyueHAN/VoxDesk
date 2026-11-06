@@ -93,7 +93,9 @@ class Handler(BaseHTTPRequestHandler):
             except Exception as exc:  # noqa: BLE001
                 self._json({"error": f"{type(exc).__name__}: {exc}"}, 500)
         elif path.startswith("/static/"):
-            self._file(STATIC / path[len("/static/"):])
+            target = STATIC / path[len("/static/"):]
+            ctype = "image/png" if target.suffix.lower() == ".png" else "application/octet-stream"
+            self._file(target, ctype)
         elif path in ("/app.css", "/app.js", "/favicon.ico"):
             ctype = "text/css; charset=utf-8" if path.endswith(".css") else (
                 "application/javascript; charset=utf-8" if path.endswith(".js") else "image/x-icon"

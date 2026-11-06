@@ -180,6 +180,18 @@ class VoiceApp:
                     pass
             raise
 
+        # 陪伴模式：用一次极短分类调用判断语气，供像素表情使用。
+        # 分类失败不阻断回答，按 neutral 处理。
+        emotion = "neutral"
+        emotion_ms = 0.0
+        if mode == "companion":
+            t_emotion = time.perf_counter()
+            try:
+                emotion = self._classify_emotion(agent.text)
+            except Exception:  # noqa: BLE001 - 表情分类失败不影响主链路
+                emotion = "neutral"
+            emotion_ms = (time.perf_counter() - t_emotion) * 1000
+
         stamp = time.strftime("%Y-%m-%dT%H:%M:%S%z")
         user_msg = {
             "role": "user",
@@ -197,6 +209,7 @@ class VoiceApp:
             "model": agent.model,
             "first_token_ms": agent.first_token_ms,
             "llm_ms": round(llm_ms),
+            "emotion": emotion,
             "created_at": stamp,
         }
         self.store.append_turns(conversation_id, user_msg, assistant_msg)
@@ -221,9 +234,27 @@ class VoiceApp:
             "first_token_ms": agent.first_token_ms,
             "tool_rounds": agent.tool_rounds,
             "model": agent.model,
+            "emotion": emotion,
+            "emotion_ms": round(emotion_ms, 1),
             "web": bool(web),
             "mode": mode,
         }
+
+    def _classify_emotion(self, text: str) -> str:
+        """极短语气分类：positive / neutral / negative；失败向上抛由调用方兜底。"""
+        messages = [
+            {
+                "role": "system",
+                "content": "你是语气分类器。只判断助手回复的情绪倾向，只输出一个词：positive、neutral 或 negative。不要解释，不要标点。",
+            },
+            {"role": "user", "content": str(text)[:1200]},
+        ]
+        reply = self.llm().chat(messages, max_tokens=8, temperature=0.0)
+        raw = (reply.text or "").strip().lower()
+        for label in ("negative", "positive", "neutral"):
+            if label in raw:
+                return label
+        return "neutral"
 
     def _recent_history(self, stored: list[dict]) -> list[dict]:
         usable = [

@@ -27,7 +27,37 @@ const state = {
   chats: [],
   archives: [],
   stats: { active: 0, archive: 0, limits: { active: 30, archive: 100, bytes: 1048576 } },
+  emote: "default",
 };
+
+const EMOTES = {
+  default: { src: "/static/emotes/default.png", caption: "陪伴模式 · 我在" },
+  happy: { src: "/static/emotes/happy.png", caption: "合作愉快！" },
+  confused: { src: "/static/emotes/confused.png", caption: "？？？" },
+  sorry: { src: "/static/emotes/sorry.png", caption: "对不起…" },
+};
+
+function emoteFromEmotion(emotion) {
+  return String(emotion || "").toLowerCase() === "negative" ? "sorry" : "happy";
+}
+
+function setEmote(kind) {
+  const next = EMOTES[kind] ? kind : "default";
+  const data = EMOTES[next];
+  const img = $("emoteImage");
+  const cap = $("emoteCaption");
+  if (!img || !cap) return;
+  state.emote = next;
+  if (img.getAttribute("src") !== data.src) {
+    img.classList.add("swap");
+    setTimeout(() => {
+      img.src = data.src;
+      img.alt = data.caption;
+      img.classList.remove("swap");
+    }, 110);
+  }
+  cap.textContent = data.caption;
+}
 
 function escapeHtml(s) {
   return String(s ?? "").replace(/[&<>"']/g, (c) => ({
@@ -333,6 +363,7 @@ function applyMode(mode) {
   $("textInput").placeholder = state.mode === "companion"
     ? "陪伴模式仅支持语音输入"
     : "发消息，Enter 发送，Shift+Enter 换行…";
+  if (state.mode === "companion") setEmote(state.emote || "default");
 }
 
 function newChat() {
@@ -345,6 +376,8 @@ function newChat() {
   $("readonlyBadge").hidden = true;
   setComposerEnabled(true);
   applyMode(state.mode);
+  state.emote = "default";
+  setEmote("default");
   $("sendBtn").disabled = true; // 空输入不可发送
   $("textInput").focus();
 }
@@ -373,6 +406,8 @@ async function loadChat(id, archived = false) {
   }
   setComposerEnabled(!archived);
   if (!archived) localStorage.setItem(LS.last, id);
+  const lastAssistant = [...(data.messages || [])].reverse().find((m) => m.role === "assistant");
+  setEmote(lastAssistant ? emoteFromEmotion(lastAssistant.emotion) : "default");
   MSG.scrollTop = MSG.scrollHeight;
 }
 
@@ -415,6 +450,7 @@ async function submit(text, source = "text", asrMs = 0) {
   }
   state.busy = true;
   $("sendBtn").disabled = true;
+  if (source !== "text") setEmote("confused");
   addUser(value, source, asrMs);
   const thinking = addThinking();
   const t0 = performance.now();
@@ -450,9 +486,11 @@ async function submit(text, source = "text", asrMs = 0) {
       tts_ms: data.tts_ms,
       first_token_ms: data.first_token_ms,
       audio: data.audio || null,
+      emotion: data.emotion || "neutral",
       created_at: new Date().toISOString(),
     };
     addAssistant(data.reply || "（空回复）", msgData);
+    setEmote(emoteFromEmotion(data.emotion));
     if (data.tts_error) toast(`文字已保存；朗读失败：${data.tts_error}`, true);
     if (data.audio && state.ttsOn) playAudio(data.audio);
     await refreshLists();
@@ -461,6 +499,7 @@ async function submit(text, source = "text", asrMs = 0) {
   } catch (err) {
     thinking.remove();
     addError(err.message || String(err));
+    setEmote("sorry");
     if (err.status === 409) toast("活跃对话已达 30 条，请先归档或删除", true);
     else if (err.status === 413) toast("单会话已达 1MB，请归档并新开", true);
     else toast(err.message || "请求失败", true);
@@ -606,6 +645,7 @@ async function startRecording(kind) {
   };
 
   updateVoiceUI(kind);
+  setEmote("confused");
   clearInterval(recorder.timer);
   recorder.timer = setInterval(() => {
     const sec = (performance.now() - recorder.startedAt) / 1000;
@@ -641,7 +681,10 @@ async function stopRecording(send = true) {
 
   const duration = (performance.now() - started) / 1000;
   if (!send || duration < 0.35) {
-    if (send) toast("录音太短，已忽略");
+    if (send) {
+      setEmote("confused");
+      toast("录音太短，已忽略");
+    }
     return;
   }
 
@@ -666,11 +709,13 @@ async function stopRecording(send = true) {
     if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
     const text = String(data.text || "").trim();
     if (!text) {
+      setEmote("confused");
       toast("没有识别到文字，请再说一次", true);
       return;
     }
     await submit(text, kind, data.asr_ms || 0);
   } catch (err) {
+    setEmote("sorry");
     toast(`语音识别失败：${err.message || err}`, true);
   } finally {
     panel.hidden = true;

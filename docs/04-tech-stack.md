@@ -3,14 +3,28 @@
 | 字段 | 值 |
 | --- | --- |
 | 文档 | `docs/04-tech-stack.md` |
-| 版本 | v0.2.8 |
-| 状态 | 待确认 |
-| 更新 | 2026-11-05 22:10 +08:00 |
+| 版本 | v0.3.0 |
+| 状态 | 部分确认（选型已定；LLM 运行时待定） |
+| 更新 | 2026-11-10 22:05 +08:00 |
 | 生效范围 | 语言选型、框架选型、四层技术栈落地 |
 
 > **本版重大变化**：由"云优先"改为**本地优先**；由"全双工"改为**半双工先行**。
 > 直接结论：**Python 3.11 单语言 + 本地推理全家桶（sherpa-onnx / Ollama / Piper）+ 自研 asyncio 语音管线**。
 > 决策依据见 [ADR-0005](adr/ADR-0005-local-first.md)、[ADR-0006](adr/ADR-0006-half-duplex.md)、[ADR-0007](adr/ADR-0007-pipeline-and-runtime.md)。
+
+### 本版决策（2026-11-10，需求方口述，逐条落档）
+
+| 领域 | 决策 | 状态 |
+| --- | --- | --- |
+| 语音管线 | **自研 asyncio Stage** 为终态；上手阶段可能先用 **Pipecat** 过渡，之后迭代回自研 | 已确认 |
+| ASR | 现役 **sherpa-onnx + Paraformer**（已实现）；**性能明显不够**，需先补降噪与评测，随后**迭代 FunASR**；不排除后续基于某个开源软件深度开发 | 已确认（迭代方向） |
+| ASR 评测 | 新增 intent：在**普通话 + 英文**场景，用**样本音频 + 参考文字**验证识别结果——统计**缺失字**、**错误字**等（详见 §3.7） | 新增 |
+| TTS | 现役 **Piper**（已实现）；**确定迭代 CosyVoice2**，且可能**基于 CosyVoice2 扩展**（不是单纯换引擎） | 已确认 |
+| 降噪 | 当前实现是**谱减**（可 bypass）；**RNNoise / DeepFilterNet3 保留为备选**，不排期 | 已确认 |
+| LLM 运行时 | **最不确定**：可能继续 **云端 DeepSeek + 提示词工程 + 多轮对话维护**，也可能转 **Ollama 本地**；取决于需求与开发难度 | 待定 |
+| 长期 intent | 最终做出一个**类似 neuro-sama 的"智能生命"**（持续在场、有记忆、有性格） | 新增 |
+
+> 因为 LLM 运行时未定，本文档状态记为"部分确认"；`02-requirements.md` 仍保持**草案**（需求优先级待确认）。
 
 ---
 
@@ -62,9 +76,9 @@ flowchart TB
         A2["Agent Harness 桥<br/>CLI / ACP / MCP"]
     end
     subgraph L3["③ 模型层"]
-        M1["LLM<br/>Qwen3-4B/8B · Ollama"]
-        M2["ASR<br/>Paraformer · sherpa-onnx"]
-        M3["TTS<br/>Piper · CosyVoice2"]
+        M1["LLM<br/>DeepSeek 云端 / Qwen3 本地（待定）"]
+        M2["ASR<br/>Paraformer（→ FunASR 迭代）"]
+        M3["TTS<br/>Piper（→ CosyVoice2）"]
         M4["VAD / KWS<br/>Silero · openWakeWord"]
         M5["Embedding<br/>bge-m3"]
     end
@@ -82,6 +96,21 @@ flowchart TB
     L2 --> L4
 ```
 
+### 2.1 交付形态（2026-11-10 新增维度）
+
+同一套 Intent，两种 Implement 形态并行存在：
+
+| 维度 | 桌面形态（A 线，原框架） | 浏览器形态（B 线，VoxDesk-Web） |
+| --- | --- | --- |
+| 入口 | 全局热键 + 托盘 | 网页（`127.0.0.1`），热键仅页面聚焦有效 |
+| 音频采集 | `sounddevice` / WASAPI | 浏览器 `getUserMedia` / `getDisplayMedia` |
+| ASR / TTS | 进程内模型 | 同一套进程内模型（Python 服务） |
+| 推理 | 目标本地 Ollama | 当前云端 DeepSeek（过渡） |
+| 状态 | 已实现 M1 + ASR 单点 | 已实现 w0.6 完整对话（见 `09`） |
+| 适用 | 离线性、常驻、系统级操作 | 演示、快速迭代、跨设备访问 |
+
+> 两形态共用端侧选型（ASR/TTS 完全一致），差异只在**采集方式**与**推理位置**。这也是后续"回填"的接缝。
+
 ## 3. 端侧（重点）
 
 半双工形态下，端侧要独立解决四件事：**听清（降噪）、听准（端点）、听得到（唤醒）、说得出（TTS）**。
@@ -92,7 +121,7 @@ flowchart TB
 | --- | --- | --- |
 | 采集/播放 | `sounddevice`（PortAudio） | Windows 下 WASAPI 支持好，回调与流式都支持 |
 | 缓冲与帧 | `numpy` float32，帧长 20–32ms | 与 VAD/KWS 输入对齐（Silero 用 512 samples @16k ≈ 32ms） |
-| 管线 | **自研 asyncio Frame/Stage 管线** | 见 [ADR-0007](adr/ADR-0007-pipeline-and-runtime.md) |
+| 管线 | **自研 asyncio Frame/Stage**（上手可先用 Pipecat 过渡，后迭代回自研） | 见 [ADR-0007](adr/ADR-0007-pipeline-and-runtime.md)；Pipecat 只作脚手架，避免框架藏住编排逻辑 |
 | 采样率 | 采集 16k 单声道；TTS 22.05k | 16k 是 ASR/KWS 标准输入，避免重采样 |
 | 全局热键 | `keyboard` | 全局热键最简单；失败时降级为托盘点击 |
 
@@ -138,6 +167,10 @@ vad:
 > 干净音频上反而略降（−0.014）→ **默认 bypass 的判断被数据证实**。
 > 代价：谱减引入 **16 ms 延迟**（1 hop）。详见代码仓 `audio/README.md`。
 
+> **2026-11-10 决策**：**RNNoise / DeepFilterNet3 保留为备选**，不排期；现役就是谱减 + bypass。
+> 理由是它在 0 dB 白噪下已把端点切错从 1 压到 0，而 RNNoise 在 Windows 上要自编 C 库、收益未验证。
+> 等 §3.7 的 ASR 评测建立后，再用"降噪前后 CER"决定是否升级。
+
 ### 3.4 TTS
 
 | 候选 | 形态 | 首包延迟（CPU） | 中文自然度 | 许可 | 结论 |
@@ -154,6 +187,10 @@ vad:
 1. **按标点切句流式合成**，不要等整段文本——首音延迟最大的单点优化
 2. 播放队列支持 `flush()`：按键打断时立刻清空并停止
 3. 音色、语速、音量可配置；语速 1.05x 在助手场景听感更自然
+
+**2026-11-10 决策**：Piper 为**现役**（已上线）；**CosyVoice2 是确定的迭代目标**，
+并且可能**基于 CosyVoice2 扩展**（例如音色克隆、情感控制），而不是把它当"又一个引擎"直接替换。
+迁移时机由 §3.7 的评测与 M6 音质需求共同决定。
 
 ### 3.5 唤醒
 
@@ -175,6 +212,28 @@ vad:
 半双工下播放时麦克风默认关闭，AEC 不是必需项。只有"播放时仍需监听"（语音打断、全双工）才需要。
 
 候选：`speexdsp` AEC（轻）/ WebRTC AEC3（效果好、接入重）。**M6 前不实现**，架构上预留 `AECStage` 位置。
+
+### 3.7 ASR 与正确性评测（2026-11-10 新增）
+
+**现状**：`sherpa-onnx` + Paraformer 流式（已实现，代码仓 `audio/`）。
+**判断**：性能明显不够好——识别准确率与鲁棒性都不足，且没有系统化的评测，改不动也说不清好坏。
+**迭代路径**：先补降噪与端到端评测，再评估 **FunASR**（含热词、时间戳、更好的中文鲁棒性）；
+不排除后续基于某个开源 ASR 项目深度开发（届时另开 ADR）。
+
+**新增 intent：ASR 正确性评测**
+
+| 要素 | 定义 |
+| --- | --- |
+| 样本集 | **普通话 + 英文**混合场景；每条 = 音频（16k wav）+ 参考文字 |
+| 规模（起步） | 普通话 30 条、英文 15 条、中英混说 15 条 |
+| 指标 | **缺失字（deletion）**、**错误字（substitution）**、插入字（insertion）、句级完全正确率 |
+| 计算 | 字级对齐（编辑距离），中文按字、英文按词；输出 CER = (S+D+I)/N |
+| 分层 | 按场景切分：安静 / 有噪（风扇、键盘）/ 远场 / 语速快 |
+| 通过线（草案） | 安静场景 CER ≤ 10%；有噪 ≤ 18%；混合 ≤ 15% |
+| 复现 | 一条命令跑全量，输出逐条 diff（参考 vs 识别）与汇总表 |
+
+> 这张表是"改 ASR 之前先有尺子"：没有它，换 FunASR 与否只能靠感觉。
+> 落地位置：代码仓 `audio/scripts/`（评测脚本），结果写回代码仓 `docs/STATUS.md` 与本文件 §3.7 的通过线。
 
 ## 4. 本地服务层（原云侧）
 
@@ -198,7 +257,7 @@ vad:
 | 类型 | 首选 | 备选 | 关键指标 |
 | --- | --- | --- | --- |
 | LLM | **Qwen3-4B-Instruct**（Q4_K_M，~2.5GB） | Qwen3-8B（16GB 机器）、Qwen2.5-7B | 首 token、tool-calling 成功率 |
-| ASR | **Paraformer-zh 流式**（sherpa-onnx） | SenseVoice-Small、Whisper-small | 首字延迟、中文 CER |
+| ASR | **Paraformer-zh 流式**（sherpa-onnx，已实现）→ **FunASR**（迭代） | SenseVoice-Small、Whisper-small | 首字延迟、中文 CER；当前性能不足，先补评测（§3.7）再换 |
 | TTS | **Piper**（piper1-gpl，GPL-3.0） | MeloTTS（MIT）/ CosyVoice（Apache-2.0） | 首包延迟、MOS、许可 |
 | VAD | **Silero VAD v5** | TEN-VAD | 端点准确率 |
 | KWS | **openWakeWord** | sherpa-onnx KWS | 唤醒率 / 误唤醒 |
@@ -275,13 +334,13 @@ vault 本质是装满 `.md` 的目录，接入分四档：
 | 语言 | Python 3.11 | — | 端侧模型生态一等公民 |
 | 包管理 | `uv` | poetry | 快、锁文件可靠 |
 | 音频 I/O | `sounddevice` | `pyaudio` | PortAudio 封装，WASAPI 可用 |
-| 语音管线 | **自研 asyncio Stage** | Pipecat | 框架会藏起最值钱的编排逻辑 |
+| 语音管线 | **自研 asyncio Stage**（终态） | Pipecat（过渡） | 框架会藏起最值钱的编排逻辑；Pipecat 只用于快速上手 |
 | VAD | `silero-vad` | `webrtcvad` | 准确率与体积的最优解 |
-| 降噪 | `RNNoise` / `DeepFilterNet3` | `speexdsp` | 一轻一重，按机器档位选 |
+| 降噪 | **谱减**（已实现，可 bypass） | RNNoise / DeepFilterNet3 / speexdsp | 备选不排期；先用 CER 验证再升级 |
 | KWS | `openWakeWord` | sherpa-onnx KWS | 可自训、体积小 |
-| ASR | `sherpa-onnx` + Paraformer | FunASR / faster-whisper | 流式 + CPU 友好 |
-| TTS | `Piper` | MeloTTS / CosyVoice2 | 首包最快，够用 |
-| LLM 运行时 | **Ollama** | llama.cpp server / vLLM | 模型管理与 OpenAI 兼容一次到位 |
+| ASR | `sherpa-onnx` + Paraformer（现役） | **FunASR**（迭代）/ faster-whisper | 流式 + CPU 友好；现役准确率不足，待评测后迁移 |
+| TTS | `Piper`（现役） | **CosyVoice2**（确定迭代）/ MeloTTS | 首包最快；CosyVoice2 可能作为扩展基座 |
+| LLM 运行时 | **待定**：云端 DeepSeek（提示词工程 + 多轮） | Ollama / llama.cpp | 取决于需求与开发难度；本地是终态，云端是过渡 |
 | 结构化输出 | `pydantic` + 约束解码 | Outlines / instructor | 先约束解码，再校验重试 |
 | Agent 协议 | MCP Python SDK | 自研 JSON-RPC | 生态标准，简历加分 |
 | 调度 | `APScheduler` | 自研轮询 | 见 ADR-0003 |
@@ -290,12 +349,14 @@ vault 本质是装满 `.md` 的目录，接入分四档：
 | 托盘 | `pystray` | PySide6 | 只做状态与菜单 |
 | 日志 | `loguru` | 标准 logging | 结构化日志开箱即用 |
 | 测试 | `pytest` + 音频回放夹具 | — | 语音链路必须能脱麦回归 |
+| 交付形态 | **桌面（A 线）+ 浏览器（B 线）** | — | 共用端侧模型；差异在采集与推理位置（§2.1） |
+| Web 栈 | **stdlib `http.server` + 原生 HTML/CSS/JS** | FastAPI + 前端框架 | 无构建、以迭代速度优先（B 线现状） |
 
 ## 8. 明确不选
 
 | 不选 | 原因 |
 | --- | --- |
-| 云端 ASR/TTS/LLM 作为主链路 | 与"离线可用"的核心定位冲突；仅留可选增强接口 |
+| 云端 ASR/TTS/LLM 作为**主链路** | 与"离线可用"的终态冲突；**B 线过渡期例外**（云端 LLM），A 线与终态仍以本地为准 |
 | Pipecat / LiveKit Agents 作骨架 | 抽象过重，会掩盖编排设计——这正是本项目要展示的部分 |
 | LangChain 全家桶 | 同上，且版本变动频繁、调试成本高 |
 | Docker | 需访问宿主音频设备与本地程序，容器化得不偿失 |

@@ -5,6 +5,36 @@
 
 ---
 
+## [v1.2.0] · 2026-11-10 22:05 +08:00 · 龙骨落档 + 选型决策 + B 线需求
+
+**类型**：新增 + 修订（MINOR）
+**范围**：`README.md`、`docs/02-requirements.md`、`docs/04-tech-stack.md`、`docs/05-roadmap.md`
+**触发**：需求方回答 `04` 的选型问题，并要求把 `Intent → Specification → Implement` 作为项目龙骨写进 README 开头
+
+### 变更
+
+| ID | 变更 | 文件 |
+| --- | --- | --- |
+| CHG-0127 | README §1 重写为「龙骨」：四层 Intent（求职 / 边学边做 / 兴趣与市场 / 智能生命）+ Spec 与 Implement 的职责映射 + 两仓分工合并进同一节 | `README.md` |
+| CHG-0128 | §2 约束修正：本地优先标注为**终态目标**，B 线现阶段允许云端推理 | `README.md` |
+| CHG-0129 | `04` 新增「本版决策（2026-11-10）」表：管线（自研 asyncio，Pipecat 过渡）、ASR（Paraformer→FunASR）、TTS（Piper→CosyVoice2 且可能以其为扩展基座）、降噪（谱减，RNNoise/DFN3 备选）、LLM 运行时（待定） | `docs/04-tech-stack.md` |
+| CHG-0130 | `04` 新增 §2.1 交付形态（桌面 A 线 / 浏览器 B 线）、§3.7 ASR 正确性评测（普通话+英文样本，缺失字/错误字/CER 通过线）；§7 总表同步 | `docs/04-tech-stack.md` |
+| CHG-0131 | `02` 新增 §1.9 B 线需求 7 条（F-075~F-081）；F-001 标注双形态；F-009/N-007 标注终态目标；**状态保持「草案」** | `docs/02-requirements.md` |
+| CHG-0132 | `02` 新增 §6 讨论：requirements 是否等价于 Intent（两种观点、当前落地、两个口径修正、下一步）；`05` 同步条数与口径 | `docs/02-requirements.md`、`docs/05-roadmap.md` |
+
+### 说明：与上一版批准项的差异
+
+需求方在批准「02 状态字段 草案 → 已确认」之后，又明确要求 **`02` 保持草案**（因为优先级尚未确认）。
+本版按**较新的指示**执行：`02` 状态仍为「草案」；`04` 状态改为「部分确认（LLM 运行时待定）」。
+
+### 仍未决定
+
+1. `02` 的 P0–P3 优先级划分；
+2. LLM 运行时：云端 DeepSeek 还是本地 Ollama；
+3. Intent 是否单列成 `docs/01b-intent.md`（当前写在 README §1.1）。
+
+---
+
 ## [v1.1.0] · 2026-11-10 21:05 +08:00 · 实现验收记录与读写代码指南
 
 **类型**：新增（MINOR）

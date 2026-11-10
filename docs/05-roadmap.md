@@ -141,7 +141,7 @@ flowchart LR
 **两件待确认仍然悬空**（`04` 状态＝待确认、`02` 状态＝草案）：
 
 1. `docs/04-tech-stack.md` 的**选型**：Python 3.11 + asyncio 管线、sherpa-onnx（ASR）、Piper（TTS）、Silero VAD、Ollama + Qwen3-4B（推理）、PyInstaller（打包）——是否照此冻结；
-2. `docs/02-requirements.md` 的**优先级**：60 条需求的 P0/P1/P2/P3 划分是否认可（特别是 P0 组：PTT、本地 ASR、本地 TTS、VAD、全断网、多轮、输入分流、程序启动、工具注册）。
+2. `docs/02-requirements.md` 的**优先级**：67 条需求（v0.3.0 新增 B 线 7 条）的 P0/P1/P2/P3 划分是否认可；**该文件仍保持「草案」**，且 `REQ-F-009`/`REQ-N-007` 的「完全断网」已标注为终态目标、现阶段不验收。
 
 **但现实已经跑到文档前面**：`7e77b2e` 之后代码仓演进为 VoxDesk-Web（浏览器应用 + DeepSeek + 联网工具），
 详见 [`09-web-implementation.md`](09-web-implementation.md)。因此"M0 → v1.0 冻结 → M1"这条线性路径已不适用。

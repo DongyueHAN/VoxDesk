@@ -5,8 +5,8 @@
 
 | 项 | 值 |
 | --- | --- |
-| 版本 | **v1.0**（2026-11-05 重构：文档分层 + 退役归档） |
-| 当前阶段 | **M2 进行中**：S0–S4 已跑通，下一步 S5 接本地 LLM |
+| 版本 | **v1.1.0**（2026-11-10 新增实现验收与读写代码指南） |
+| 当前阶段 | **双线**：A 线（原框架）M2 收尾；B 线（Web）已跑到 w0.6，见 `09` |
 | 代码仓 | `D:\VoxDesk`（`master` 主线 · `demo/deepseek-voice` 演示） |
 | 权威源 | 本仓 `docs/`；聊天记录与口头结论不算数 |
 
@@ -57,7 +57,9 @@
 | [`docs/05-roadmap.md`](docs/05-roadmap.md) | 里程碑拆解 M0–M7 |
 | [`docs/06-reference-landscape.md`](docs/06-reference-landscape.md) | 小爱 / OpenClaw / 竞品对照 |
 | [`docs/07-model-layer.md`](docs/07-model-layer.md) | 模型层：选型、运行时、内存预算、工具调用可靠性 |
-| [`docs/08-M2process.md`](docs/08-M2process.md) | **当前冲刺**：M2 的 S4–S7、闸门、时延/显存预算 |
+| [`docs/08-M2process.md`](docs/08-M2process.md) | **A 线冲刺**：M2 的 S4–S7、闸门、时延/显存预算 |
+| [`docs/09-web-implementation.md`](docs/09-web-implementation.md) | **当前实现验收**：VoxDesk-Web w0.6 的接口、能力、偏差 | 
+| [`docs/10-code-reading.md`](docs/10-code-reading.md) | **读/写代码方法**：Intent → Specification → Implement |
 | [`docs/adr/`](docs/adr/) | 10 份架构决策记录（`ADR-0001`…`0010`） |
 | [`docs/archive/`](docs/archive/README.md) | 已退役文档（08/09/11/12 原件，仅备查） |
 | [`CHANGELOG.md`](CHANGELOG.md) | 变更流水（只追加，是"何时改了什么"的唯一记录） |

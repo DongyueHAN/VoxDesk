@@ -3,9 +3,9 @@
 | 字段 | 值 |
 | --- | --- |
 | 文档 | `docs/00-spec.md` |
-| 版本 | v0.3.0 |
+| 版本 | v0.3.1 |
 | 状态 | **待确认**（确认后升为 v1.0 冻结） |
-| 更新 | 2026-11-05 22:10 +08:00 |
+| 更新 | 2026-11-10 21:05 +08:00 |
 | 生效范围 | 本仓库全部 `docs/` 与 `CHANGELOG.md` |
 
 ---
@@ -39,6 +39,8 @@
 │   ├── 06-reference-landscape.md  参考产品对照
 │   ├── 07-model-layer.md      模型层：选型 / 运行时 / 预算 / 可靠性
 │   ├── 08-M2process.md        M2 进程：S4–S7、时延/显存预算、闸门
+│   ├── 09-web-implementation.md  当前实现验收记录（VoxDesk-Web w0.6）
+│   ├── 10-code-reading.md     读代码与写代码：Intent → Spec → Implement
 │   ├── archive/               已退役文档（08/09/11/12 原件 + 退役说明）
 │   └── adr/ADR-XXXX-*.md      架构决策记录（一事一档）
 └── 【研究资料，暂不入库或单独管理】

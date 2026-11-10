@@ -1,114 +1,116 @@
-# 发布到 GitHub：基于 `demo/deepseek-voice` 的新分支
+# 发布与 GitHub Desktop 流程（PUBLISH）
 
-> 目标仓库：https://github.com/DongyueHAN/VoxDesk
-> 基线：远端 `demo/deepseek-voice`，即本机 `D:\VoxDesk` 的 HEAD `7e77b2e`
-> 新分支：`web/w0.6`
+> 当前仓库：`D:\VoxDesk`
+> 当前分支：`web/w0.6`
+> 远端：`https://github.com/DongyueHAN/VoxDesk.git`
 
-## 目录说明
+## 1. 日常推送（GitHub Desktop）
 
-为了让新分支真正从 `demo/deepseek-voice` 长出来，发布内容放在一个**独立克隆**里，
-不修改 `D:\VoxDesk`：
+1. GitHub Desktop 打开 `D:\VoxDesk`；
+2. 确认当前分支是 `web/w0.6`（或你的 feature 分支）；
+3. 先 **Pull origin**，再改代码；
+4. 提交前检查 `Changes` 只包含预期文件；
+5. Commit → Push origin。
+
+命令行等价：
+
+```powershell
+cd D:\VoxDesk
+git status --short
+git pull --ff-only
+git add <files>
+git commit -m "feat: ..."
+git push
+```
+
+禁止：
+
+- 把 `.env`、模型、`data/`、`out/`、`defense/`、`*.wav` 加进提交；
+- 直接 `git push --force` 覆盖远端；
+- 直接把无关历史 merge 进 `web/w0.6`。
+
+## 2. 分支策略
 
 ```text
-D:\VoxDesk-Web\out\publish\VoxDesk
+web/w0.6       集成分支 / 当前默认开发分支
+  ├─ feat/xxx  新功能
+  ├─ fix/xxx   Bug 修复
+  └─ docs/xxx  文档
 ```
 
-这个目录是 `out/` 下的临时发布 checkout（gitignore），特点是：
+- 一个分支只做一件事；
+- 通过 PR 合并到 `web/w0.6`；
+- demo/deepseek-voice 作为历史基线保留，不作为当前开发主线；
+- 不把 `D:\VoxDesk-Web` 的独立历史强行 merge 进来；需要时先确认策略。
 
-- 父提交 = `7e77b2e`（demo 分支 HEAD），可直接向 demo 分支开 PR；
-- 保留 demo 分支原有的 `demo/`、`LICENSE`、`demo.mp4`、`audio/`、`tts/` 测试与文档；
-- 叠加 Web 应用：`server.py`、`voice_app.py`、`static/app.*`、`start.ps1` 等；
-- `audio/`、`tts/` 使用 demo 分支的版本，不重复造一份；
-- 模型、`data/`、`out/`、`.env` 不入库；
-- 本地分支已创建：`web/w0.6`。
-
-> 源仓库 `D:\VoxDesk-Web` 仍是开发仓库；它的 `master` 不直接推送到 GitHub。
-> 上传完成后，发布 checkout 可以保留或删除。
-
-## 一、推送（只差这一步）
-
-本机凭据 helper 是 `manager`。进入发布 checkout：
+## 3. 发布前验证
 
 ```powershell
-cd D:\VoxDesk-Web\out\publish\VoxDesk
-git status --short          # 应为干净
-git log --oneline -3        # 第一条是 w0.6 提交，第二条是 7e77b2e
-git push -u origin web/w0.6
+cd D:\VoxDesk
+.\start.ps1
+
+& 'D:\VoxDesk\demo\.venv\Scripts\python.exe' -m py_compile `
+  server.py voice_app.py llm.py search.py store.py prompts.py paths.py
+node --check static\app.js
+
+Invoke-RestMethod http://127.0.0.1:8800/api/health | ConvertTo-Json
+Invoke-WebRequest http://127.0.0.1:8800/ -UseBasicParsing | Select-Object StatusCode
 ```
 
-第一次 push 会弹 GitHub 登录/凭据窗口；按提示登录 `DongyueHAN` 账号即可。
-不要把 Personal Access Token 直接写进 remote URL。
+发布前至少确认：
 
-如果 remote 不对：
+- `/api/health` 返回 200，ASR/TTS/api_key 正常；
+- 文字对话、F2 语音、TTS、陪伴模式表情、归档/刷新持久化通过；
+- 无密钥/模型/数据进入 Git；
+- CHANGELOG/文档已更新。
+
+## 4. 打 tag / release
 
 ```powershell
-git remote set-url origin https://github.com/DongyueHAN/VoxDesk.git
+git tag -a w0.6.x -m "w0.6.x: ..."
+git push origin w0.6.x
 ```
 
-如果推送后提示分支已存在（本机查询时不存在），换一个名字：
+- tag 只打在验证通过的提交；
+- GitHub Release 说明写：新增、修复、破坏性变更、已知问题；
+- 需要源码 ZIP 时用 GitHub 的 `Code → Download ZIP`，或在干净目录打包；
+- **源码 ZIP 不含模型**；模型/venv 需另外准备。
 
-```powershell
-git push -u origin web/w0.6-20261106
-```
-
-不要用 `--force` 推已有分支。
-
-## 二、认证备选（HTTPS 无弹窗时）
-
-```powershell
-git config --global credential.helper manager
-git push -u origin web/w0.6
-```
-
-或 SSH：
-
-```powershell
-ssh-keygen -t ed25519 -C "your-email@example.com"
-Get-Content $env:USERPROFILE\.ssh\id_ed25519.pub
-# 把公钥加到 GitHub → Settings → SSH and GPG keys
-ssh -T git@github.com
-cd D:\VoxDesk-Web\out\publish\VoxDesk
-git remote set-url origin git@github.com:DongyueHAN/VoxDesk.git
-git push -u origin web/w0.6
-```
-
-## 三、验证
-
-推送成功后打开：
-
-```text
-https://github.com/DongyueHAN/VoxDesk/tree/web/w0.6
-```
-
-确认：
-
-1. 分支基于 `demo/deepseek-voice`（提交历史里能看到 `7e77b2e`）；
-2. 根目录有 `server.py`、`voice_app.py`、`static/app.html`、`start.ps1`；
-3. 有 `demo/`、`audio/`、`tts/`（从 demo 分支保留）；
-4. 没有 `audio/models`、`tts/models`、`data/`、`.env`；
-5. 页面可读 [README.md](../README.md)。
-
-可以开 PR：`web/w0.6` → `demo/deepseek-voice`。
-因为分支基于 demo，PR 的 diff 只包含 Web 应用与文档改动。
-
-## 四、在新机器上运行分支
+## 5. 新机器运行源码包
 
 ```powershell
 git clone --branch web/w0.6 https://github.com/DongyueHAN/VoxDesk.git
 cd VoxDesk
-# 模型不在 git 里；把模型放回：
-#   audio/models/...
-#   tts/models/zh_CN-huayan-medium.onnx
-# 或从本机复制（约 289MB）
-# 依赖：本机已有 D:\VoxDesk\demo\.venv，或按 requirements.txt 建 .venv
+
+# 1) Python 3.11 环境
+py -3.11 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+
+# 2) 放模型（约 289MB，不在 Git）
+# audio/models/...
+# tts/models/zh_CN-huayan-medium.onnx
+
+# 3) API key
+# 在根目录建 .env：DEEPSEEK_API_KEY=sk-...
+
 .\start.ps1
 ```
 
-## 五、注意事项
+如果本机已有 `D:\VoxDesk\demo\.venv`，`start.ps1` 会回退使用它；换机必须按
+`requirements.txt` 安装。
 
-- 当前 `D:\VoxDesk` 工作区有未提交的文档修改；发布分支只基于它的 **HEAD**，
-  不包含那些本地改动。
-- 如果远端 demo 分支之后又更新，先 `git fetch origin`、`git rebase origin/demo/deepseek-voice`
-  再 push；不要强推。
-- 如果想要完全独立的 Web 快照分支（不带 demo 历史），那是另一种方案，不适合 PR；
-  当前不采用。
+## 6. 历史说明
+
+早期为了让 `web/w0.6` 从 `demo/deepseek-voice` 长出来，曾使用
+`D:\VoxDesk-Web\out\publish\VoxDesk` 临时发布 checkout。该目录只属于历史流程，
+**现在不再作为发布源**。
+
+当前发布源就是 `D:\VoxDesk` 本身；不要在 `out/publish` 和主仓库之间手工同步。
+
+## 7. 出问题时的回滚
+
+1. 回退到上一个 tag/commit；
+2. 保留失败版本的日志与错误；
+3. 如果模型/依赖升级导致回滚，恢复上一版模型哈希与 requirements；
+4. 重新跑 DEVELOPING 的最低回归清单；
+5. 在 DECISIONS/PITFALLS 记录原因，避免重复。

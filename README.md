@@ -207,12 +207,54 @@ http://127.0.0.1:8800/api/health
 5. 刷新页面，确认会话仍在；
 6. 切换“陪伴”模式，确认只能语音输入。
 
-更多文档：
+## 文档阅读顺序（开发者 / Agent）
 
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
-- [`docs/STATUS.md`](docs/STATUS.md)
-- [`docs/PITFALLS.md`](docs/PITFALLS.md)
-- [`docs/PLAN.md`](docs/PLAN.md)
+> 这是正常开发仓库，不是一次性 demo。先读文档，再改代码；不要只看 README 就直接开工。
+
+| 顺序 | 文档 | 解决什么 | 什么时候读 |
+| --- | --- | --- | --- |
+| 1 | [`README.md`](README.md) | 项目是什么、能做什么、怎么跑 | 每次开工前 |
+| 2 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | 数据流、接口、存储、线程模型 | 改任何链路前 |
+| 3 | [`docs/STATUS.md`](docs/STATUS.md) | 当前能力、实测数字、已知缺口 | 判断“现在到底能做什么” |
+| 4 | [`docs/PITFALLS.md`](docs/PITFALLS.md) | 46 个坑与修正 | 改音频/模型/前端/存储前 |
+| 5 | [`docs/PLAN.md`](docs/PLAN.md) | P1 结果、P2/P3 优先级 | 排期和拆任务前 |
+| 6 | [`docs/DEVELOPING.md`](docs/DEVELOPING.md) | 正常开发流程：分支、测试、依赖、发布 | 写第一行代码前 |
+| 7 | [`docs/SECURITY.md`](docs/SECURITY.md) | 密钥、隐私、SSRF、数据、许可 | 动网络/文件/密钥前 |
+| 8 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | 关键架构决策与取舍 | 想改架构/换模型前 |
+| 9 | [`docs/GLOSSARY.md`](docs/GLOSSARY.md) | 模型、运行时、英文缩写 | 读架构/写答辩/交接前 |
+| 10 | [`docs/PUBLISH.md`](docs/PUBLISH.md) | GitHub 分支、安装包、发布 | 发布/演示前 |
+| 11 | [`docs/HANDOFF.md`](docs/HANDOFF.md) | 原框架历史交接 | 只在追溯原框架时读，**不是当前 Web 规范** |
+
+> 版本记录：[`CHANGELOG.md`](CHANGELOG.md)。发布前先看 `docs/PUBLISH.md`。
+>
+> 当前 Web 运行路径是根目录的 `server.py`、`voice_app.py`、`static/`；`demo/`、`audio/scripts/`、
+> `VoxDeskVoice/` 属于原框架历史内容，不是当前 Web 的启动路径，除非任务明确要求兼容原框架。
+
+### Agent 开工规则
+
+1. **先看仓库状态**：`git status --short`、当前分支、最近提交；不要在有未提交改动时直接覆盖。
+2. **按上表顺序读文档**，至少读 1–6；不要用旧对话里的路径/结论替代当前文档。
+3. **先复现基线**：启动服务，检查 `/api/health`；不能复现基线就不改功能。
+4. **先计划后编码**：涉及架构、模型、存储、API 的改动，先写 `docs/DECISIONS.md` 或任务拆分。
+5. **最小改动**：一次只解决一个问题；不要顺手重构无关模块，不要批量重写前端。
+6. **不碰受保护边界**：模型文件、`data/`、`.env`、`out/`、`defense/` 不入库；不提交大二进制。
+7. **必须验证**：`py_compile`、`node --check`、API smoke test；改了 UI 要跑浏览器验证；改了存储要测边界。
+8. **同步文档**：接口/数据流改 ARCHITECTURE；能力/数字改 STATUS；新坑改 PITFALLS；计划改 PLAN；架构取舍改 DECISIONS。
+9. **正常开发走分支 + PR**：不要直接在默认分支堆改动；一次 PR 只做一件事，说明测试与风险。
+10. **不伪造结果**：没有实测数字就写“未验证”；没有工具来源就说“无法确认”。
+
+### 正常开发 vs 急速 demo
+
+| 维度 | 急速 demo | 正常开发 |
+| --- | --- | --- |
+| 分支 | 直接改 | feature branch + PR/review |
+| 测试 | 手点一下 | unit + API + UI + regression |
+| 依赖 | 能跑就行 | 锁定版本、记录模型哈希/许可 |
+| 数据 | 本地 JSON 随便写 | schema/版本/迁移/备份 |
+| 安全 | 本机单用户 | 鉴权、限流、SSRF、密钥管理 |
+| 发布 | 直接覆盖 | tag、changelog、回滚方案 |
+
+正式流程和检查清单见 [`docs/DEVELOPING.md`](docs/DEVELOPING.md)。
 
 ## 致谢 Acknowledgements
 

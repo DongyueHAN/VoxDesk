@@ -52,8 +52,8 @@
 | # | 维度 | 对方口径（证据） | 我方基线（引用） | 判定 |
 | --- | --- | --- | --- | --- |
 | **A1** | **交互形态** | 全双工：`project/docs` 规划"话轮状态预测器"，插在 LLM 与 TTS 之前，解决误停顿/误响应/误打断（摘要转述）；根目录 `.docx` 标题即"全双工…" | **半双工先行**，全双工列 P3；见 [`01-scope.md`](../01-scope.md) §5、[`REQ-F-013`](../02-requirements.md)（P3 降级）、[`REQ-C-007`](../02-requirements.md)、`ADR-0006`、[`03-architecture.md`](../03-architecture.md) §7 | **有意的分歧，不是错误**。但若不声明，答辩时会被问"你的项目和课题什么关系" |
-| **A2** | **推理硬件** | `check_env.sh` 第 36 行：CUDA 不可用即 `[FAIL]`，"状态服务默认 `device=cuda`，跑不了"；第 33–34 行：显存 < 22 GiB 警告"完整对话系统可能放不下" | 8 GB 最低档 / 16 GB 推荐档，纯 CPU 跑 4B；见 [`04-tech-stack.md`](../04-tech-stack.md) §9、[`REQ-N-002`](../02-requirements.md) | **硬冲突**：同一台机器不可能同时满足"≥22 GB 显存"与"8 GB 内存可跑" |
-| **A3** | **是否训练模型** | 基于 SoulX-Duplug 0.6B 训练话轮状态预测器（摘要转述）；`check_env.sh` 第 63 行预期 `pretrained_models`/`third_party/SoulX-Duplug` 存在 | **训练/微调明确列为非目标**；见 [`01-scope.md`](../01-scope.md) §5、[`04-tech-stack.md`](../04-tech-stack.md) §8 | **范围冲突**：我方交付的是编排层，不是模型 |
+| **A2** | **推理硬件** | `check_env.sh` 第 36 行：CUDA 不可用即 `[FAIL]`，"状态服务默认 `device=cuda`，跑不了"；第 33–34 行：显存 < 22 GiB 警告"完整对话系统可能放不下" | 8 GB 最低档 / 16 GB 推荐档，纯 CPU 跑 4B；见 [`06-tech-stack.md`](../06-tech-stack.md) §9、[`REQ-N-002`](../02-requirements.md) | **硬冲突**：同一台机器不可能同时满足"≥22 GB 显存"与"8 GB 内存可跑" |
+| **A3** | **是否训练模型** | 基于 SoulX-Duplug 0.6B 训练话轮状态预测器（摘要转述）；`check_env.sh` 第 63 行预期 `pretrained_models`/`third_party/SoulX-Duplug` 存在 | **训练/微调明确列为非目标**；见 [`01-scope.md`](../01-scope.md) §5、[`06-tech-stack.md`](../06-tech-stack.md) §8 | **范围冲突**：我方交付的是编排层，不是模型 |
 
 **A 级的共同根因**：课题验收看"三个指标"（尾点准确率 >90% 且时延 <300 ms；拒识 误拒<2% / 拒识率>90%；打断 误拒<2% / 拒识率>85%，见根目录提案 `基于全双工语音交互大模型…md`（作者私有笔记，不在本仓）），而我方验收看**五条可现场演示的行为**（[`01-scope.md`](../01-scope.md) §7）。**指标型交付与演示型交付，本来就不该共用一套代码。**
 
@@ -61,7 +61,7 @@
 
 | # | 维度 | 对方口径（证据） | 我方基线（引用） | 判定与处置 |
 | --- | --- | --- | --- | --- |
-| **B1** | **语言与运行时** | bash 脚本、`python3`、官方要求 **3.10**、`torch` + CUDA、结尾提示"可以跑 `run.sh`"（`check_env.sh` 第 11/21/24/74 行） | **Windows 11 + PowerShell**（[`REQ-C-005`](../02-requirements.md)）；**Python 3.11 + uv**（[`04-tech-stack.md`](../04-tech-stack.md) §1.4） | 3.10 与 3.11 可共存，**但脚本不可复用**。我方环境检查自己写 `.ps1`，不抄 `check_env.sh` |
+| **B1** | **语言与运行时** | bash 脚本、`python3`、官方要求 **3.10**、`torch` + CUDA、结尾提示"可以跑 `run.sh`"（`check_env.sh` 第 11/21/24/74 行） | **Windows 11 + PowerShell**（[`REQ-C-005`](../02-requirements.md)）；**Python 3.11 + uv**（[`06-tech-stack.md`](../06-tech-stack.md) §1.4） | 3.10 与 3.11 可共存，**但脚本不可复用**。我方环境检查自己写 `.ps1`，不抄 `check_env.sh` |
 | **B2** | **接口命名** | `project/src/README.md` 定义 `TurnClient`、`Player`（摘要转述，代码未落地） | `IF-05 Speak(text_stream) -> PlaybackHandle`；`Player.play(wav_path)`（[`09-tts-module.md`](09-tts-module.md) §4） | **`Player` 撞名**。若将来对接：我方内部保留 `Player`，对外只认 `IF-05`；不承诺对方脚本可直接调用我方类 |
 | **B3** | **预测器插点** | "插在 LLM 和 TTS 前面"（摘要转述） | 对应的位置是 **CMP-02 会话网关**（状态机 + 通道仲裁）与 **CMP-01 端点判定** | 缺一层映射声明。**建议落点**：CMP-02 内部加 `predictor` 钩子，而不是"LLM 之前"——见 §4 |
 
@@ -172,5 +172,5 @@ flowchart LR
 | 项 | 决策 | 落地位置 |
 | --- | --- | --- |
 | 形态 | 先基于开源项目做**半双工 demo** | 维持 `ADR-0006` |
-| 硬件 | 暂定 **16 GB 内存**；有 GPU 走 GPU 档，无 GPU 按 8 GB 档验收；多模型并行时再改 | [`04`](../04-tech-stack.md) §9 |
+| 硬件 | 暂定 **16 GB 内存**；有 GPU 走 GPU 档，无 GPU 按 8 GB 档验收；多模型并行时再改 | [`06`](../06-tech-stack.md) §9 |
 | 历史 ADR | 可因开源学习而被推翻，但必须走"新 ADR + 原文件标 `已取代`"的流程 | [`00-spec`](../00-spec.md) §11 |

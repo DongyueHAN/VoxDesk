@@ -78,7 +78,7 @@
 2. **ONNX + C++ 核心 + Python 绑定**，CPU 不需要 GPU，与"8 GB 也能跑"一致
 3. **Apache-2.0 + 持续活跃**（2026-10-26），比一堆停更的语音项目可靠
 
-**FunASR 作中文备选**：它的 Paraformer 正是 `04-tech-stack.md` 选定的模型，流式 + VAD + 标点是完整方案；若 sherpa-onnx 中文不达标，整体切换成本可控。
+**FunASR 作中文备选**：它的 Paraformer 正是 `06-tech-stack.md` 选定的模型，流式 + VAD + 标点是完整方案；若 sherpa-onnx 中文不达标，整体切换成本可控。
 
 **faster-whisper 作质量兜底**：非流式、延迟高，但准确率稳，适合"说完再转"的离线批处理。
 
@@ -166,7 +166,7 @@
 | [coqui-ai/TTS](https://github.com/coqui-ai/TTS) | 46,151 | MPL-2.0 | 框架 | — | 不选（公司已关停） | 不读 |
 | [unslothai/unsloth](https://github.com/unslothai/unsloth) | 79,047 | Apache-2.0 | **训练/运行平台** | — | 不选（不合成语音） | 不读：但它能 `unsloth start dsh`，M5 可参考 |
 
-> 另有 **`snakers4/silero-vad`**（6,000+★，MIT）——不是 TTS，是 `CMP-01` 已选定的 VAD 组件，归 `04` §3.2。
+> 另有 **`snakers4/silero-vad`**（6,000+★，MIT）——不是 TTS，是 `CMP-01` 已选定的 VAD 组件，归 `06` §3.2。
 
 ### 3.2 物种判断（先分类，再比性能）
 
@@ -192,7 +192,7 @@
 | 许可 | 系统自带 | ⚠️ GPL-3.0 | ✅ Apache-2.0 | ✅ MIT | ❌ 非商用 |
 | 部署 | 0 | 60 MB | 数 GB + GPU | 数 GB | 数百 MB |
 
-> 速度数字的**唯一口径**是 `04` §3.4（首包 / RTF 实测）与本表脚注（README 原数）；两处冲突时以实测为准。
+> 速度数字的**唯一口径**是 `06` §3.4（首包 / RTF 实测）与本表脚注（README 原数）；两处冲突时以实测为准。
 
 **为什么 S2 不改 GPT-SoVITS**：它的 RTF 0.028 是 **4060Ti** 的数，同一份 README 里 CPU（M4）是 **0.526**——10 秒音频要 5.3 秒合成，"首音 1.5 s"直接不成立。
 
@@ -209,7 +209,7 @@
 
 ### 3.5 顺带核实
 
-1. **Piper 的继任者也在招维护者**——README 顶部写着 "looking for maintainers"（2026-11-05）。`04` §10 已登记。
+1. **Piper 的继任者也在招维护者**——README 顶部写着 "looking for maintainers"（2026-11-05）。`06` §10 已登记。
 2. **CosyVoice 仓库 5 个月没提交**（最后 push 2026-05-25）。M6 按"当前版本可用"评估，不指望修 bug。
 3. **CosyVoice 的 0.5B 与 GPT-SoVITS 的"数 GB"不是一回事**——前者单模型 0.5B（下载 1–2 GB），后者 PyTorch + 多组件。
 

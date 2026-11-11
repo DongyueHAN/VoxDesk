@@ -72,7 +72,7 @@
 
 做不到就别提交：
 
-1. `README.md` §3 与 `docs/05-roadmap.md` §1 的状态逐行一致；
+1. `README.md` §3 与 `docs/07-roadmap.md` §1 的状态逐行一致；
 2. 新写的设计 / 决策能追溯到 `docs/` 某一份文件；
 3. 退役文档进 `docs/archive/`，并在 `docs/archive/README.md` 写明原因；
 4. `CHANGELOG.md` 有对应条目。

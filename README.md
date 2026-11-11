@@ -5,7 +5,7 @@
 
 | 项 | 值 |
 | --- | --- |
-| 版本 | **v1.8.0**（2026-11-11 文档重编号：`04` 事实 → `05` 机制 → `06` 决策；v1.7.0 = 选型链） |
+| 版本 | **v1.9.0**（2026-11-12 新增 `11` 决策登记册 + `12` 分工与协作；v1.8.0 = 重编号） |
 | 当前阶段 | **双线**（2026-11-11 批准）：A 线 M2 收尾（S4 ✅ / S5 起步）；B 线 w0.6 已验收，下一个是 w0.7 |
 | 代码仓 | `D:\VoxDesk`（`master` 主线 · `demo/deepseek-voice` 演示） |
 | 权威源 | 本仓 `docs/`；聊天记录与口头结论不算数 |
@@ -103,6 +103,8 @@
 | [`docs/08-M2process.md`](docs/08-M2process.md) | **A 线冲刺**：M2 的 S4–S7、闸门、时延/显存预算 |
 | [`docs/09-web-implementation.md`](docs/09-web-implementation.md) | **当前实现验收**：VoxDesk-Web w0.6 的接口、能力、偏差 | 
 | [`docs/10-code-reading.md`](docs/10-code-reading.md) | **读/写代码方法**：Intent → Specification → Implement |
+| [`docs/11-decisions.md`](docs/11-decisions.md) | **决策登记册**：哪些还悬着（`DEC-0xx`）、哪些已定（`DEC-1xx`） |
+| [`docs/12-team-and-workpackages.md`](docs/12-team-and-workpackages.md) | **分工与协作**：6 个工作包、接口契约、mock 与门禁 |
 | [`docs/adr/`](docs/adr/) | 10 份架构决策记录（`ADR-0001`…`0010`） |
 | [`docs/archive/`](docs/archive/README.md) | 已退役文档（08/09/11/12 原件，仅备查） |
 

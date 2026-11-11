@@ -5,7 +5,7 @@
 
 | 项 | 值 |
 | --- | --- |
-| 版本 | **v1.9.0**（2026-11-12 新增 `11` 决策登记册 + `12` 分工与协作；v1.8.0 = 重编号） |
+| 版本 | **v1.9.1**（2026-11-12 四组分组 + 三条读法 + 位置行；v1.9.0 = 决策册与分工） |
 | 当前阶段 | **双线**（2026-11-11 批准）：A 线 M2 收尾（S4 ✅ / S5 起步）；B 线 w0.6 已验收，下一个是 w0.7 |
 | 代码仓 | `D:\VoxDesk`（`master` 主线 · `demo/deepseek-voice` 演示） |
 | 权威源 | 本仓 `docs/`；聊天记录与口头结论不算数 |
@@ -90,23 +90,48 @@
 
 ## 4. 文档地图
 
+**按四组看，不按编号看**——编号是稳定索引，阅读顺序见 §5。
+
+### 组 A · 定义（做什么、做成什么样）
+
 | 文件 | 回答什么问题 |
 | --- | --- |
 | [`docs/00-spec.md`](docs/00-spec.md) | 文档规范：版本、时间戳、编号、图规范、ADR 生命周期 |
 | [`docs/01-scope.md`](docs/01-scope.md) | 范围、场景、非目标、成功标准 |
 | [`docs/02-requirements.md`](docs/02-requirements.md) | 需求池 67 条（`REQ-*`）+ 与 Intent 的口径 |
 | [`docs/03-architecture.md`](docs/03-architecture.md) | **权威架构**：C4、6 条流程（`FLOW-01`~`06`）、半双工状态机、领域类图 |
-| [`docs/04-oss-and-products.md`](docs/04-oss-and-products.md) | **选型链 1/3 · 事实**：13 环节清单 + 七个角度的取舍 |
-| [`docs/05-model-layer.md`](docs/05-model-layer.md) | **选型链 2/3 · 机制**：模型怎么跑（量化、运行时、显存、工具可靠性） |
-| [`docs/06-tech-stack.md`](docs/06-tech-stack.md) | **选型链 3/3 · 决策**：现版本选谁、参数、一句理由 |
-| [`docs/07-roadmap.md`](docs/07-roadmap.md) | 里程碑拆解 M0–M7 |
-| [`docs/08-M2process.md`](docs/08-M2process.md) | **A 线冲刺**：M2 的 S4–S7、闸门、时延/显存预算 |
-| [`docs/09-web-implementation.md`](docs/09-web-implementation.md) | **当前实现验收**：VoxDesk-Web w0.6 的接口、能力、偏差 | 
-| [`docs/10-code-reading.md`](docs/10-code-reading.md) | **读/写代码方法**：Intent → Specification → Implement |
+
+### 组 B · 选型链（外面有什么 → 怎么跑 → 选谁）
+
+| 文件 | 回答什么问题 |
+| --- | --- |
+| [`docs/04-oss-and-products.md`](docs/04-oss-and-products.md) | **1/3 · 事实**：13 环节清单 + 七个角度的取舍 |
+| [`docs/05-model-layer.md`](docs/05-model-layer.md) | **2/3 · 机制**：模型怎么跑（量化、运行时、显存、工具可靠性） |
+| [`docs/06-tech-stack.md`](docs/06-tech-stack.md) | **3/3 · 决策**：现版本选谁、参数、一句理由 |
+
+### 组 C · 治理（还悬着什么、怎么分工）
+
+| 文件 | 回答什么问题 |
+| --- | --- |
 | [`docs/11-decisions.md`](docs/11-decisions.md) | **决策登记册**：哪些还悬着（`DEC-0xx`）、哪些已定（`DEC-1xx`） |
 | [`docs/12-team-and-workpackages.md`](docs/12-team-and-workpackages.md) | **分工与协作**：6 个工作包、接口契约、mock 与门禁 |
+
+### 组 D · 实践（按什么顺序推进——**会过期**）
+
+| 文件 | 回答什么问题 | 时效 |
+| --- | --- | --- |
+| [`docs/07-roadmap.md`](docs/07-roadmap.md) | 里程碑拆解 M0–M7 | 状态列随冲刺回写 |
+| [`docs/08-M2process.md`](docs/08-M2process.md) | **A 线冲刺**：M2 的 S4–S7、闸门、时延/显存预算 | 期次记录，闸门数值冻结 |
+| [`docs/09-web-implementation.md`](docs/09-web-implementation.md) | **一次验收快照**：VoxDesk-Web w0.6 的能力与偏差 | 快照，现状以代码仓为准 |
+| [`docs/10-code-reading.md`](docs/10-code-reading.md) | **读/写代码方法**：Intent → Specification → Implement | 方法不随版本过期 |
+
+### 其他
+
+| 文件 | 说明 |
+| --- | --- |
 | [`docs/adr/`](docs/adr/) | 10 份架构决策记录（`ADR-0001`…`0010`） |
 | [`docs/archive/`](docs/archive/README.md) | 已退役文档（08/09/11/12 原件，仅备查） |
+| [`CHANGELOG.md`](CHANGELOG.md) | 变更流水（只追加，是"何时改了什么"的唯一记录） |
 
 > **编号变更（v1.8.0，2026-11-11）**：为了让"清单 → 模型 → 决定"连号，四份文档换了编号。
 > `CHANGELOG` 里 v1.8.0 之前的条目沿用**旧编号**，对照如下：
@@ -117,26 +142,20 @@
 > | 07 | **05** | 模型层 | 2/3 机制 |
 > | 04 | **06** | 技术栈 | 3/3 决策 |
 > | 05 | **07** | 里程碑与拆解 | 链外 |
-| [`CHANGELOG.md`](CHANGELOG.md) | 变更流水（只追加，是"何时改了什么"的唯一记录） |
 
-## 5. 怎么读（两条路径）
+## 5. 怎么读（三条路径）
 
-**agent 接手（约 10 分钟）**
+编号是稳定索引，**读法按需选**——三条路径，互不替代。
 
-1. 本文 §2 方向与 §1 分工；
-2. `docs/01-scope.md` —— 不做什么比做什么更重要；
-3. `docs/03-architecture.md` §2–§3 —— 记住 5 层 12 组件与主链路；
-4. `docs/08-M2process.md` —— 当前冲刺的闸门与预算；
-5. 需要改代码时，转到代码仓的 `AGENTS.md` 与 `docs/HANDOFF.md`。
+| 路径 | 什么时候用 | 顺序 |
+| --- | --- | --- |
+| **① 新人上手**（约 30 分钟） | 第一次进项目，或要接一块活 | 本文 §1–§2 → `01-scope` → `03-architecture` §3（组件与接口）→ **`12-team`（我接哪块）** → `10-code-reading`（怎么读代码） |
+| **② 查证**（为什么选它） | 质疑或复核某个选型 | `04-oss`（事实）→ `05-model`（机制）→ `06-tech-stack`（决策）——**不能跳**，先看决定再看取舍，看不出"为什么不是另一个" |
+| **③ 查状态**（现在到哪了） | 汇报、接手、判断能不能开工 | **`11-decisions`（还悬着什么）** → `07-roadmap`（里程碑）→ `08-M2process` / `09-web`（当前批次与快照） |
 
-**人了解（约 30 分钟）**
+**agent 接手（约 10 分钟）**：本文 §1–§2 → `docs/01-scope.md` → `docs/03-architecture.md` §2–§3 → `docs/08-M2process.md` → 代码仓 `AGENTS.md` 与 `docs/HANDOFF.md`。
 
-本文 → `docs/01-scope.md` → `docs/07-roadmap.md` → `docs/03-architecture.md`（只看图）→ 代码仓 `README.md`。
-
-**选型链（想搞清"为什么选这个"时按顺序读）**
-
-`docs/04-oss-and-products.md`（外面有什么、代价）→ `docs/05-model-layer.md`（模型怎么跑）→ `docs/06-tech-stack.md`（我们选了谁）。
-**顺序不能跳**：先看决定再看取舍，会看不出"为什么不是另一个"。
+**人了解（约 30 分钟）**：本文 → `docs/01-scope.md` → `docs/07-roadmap.md` → `docs/03-architecture.md`（只看图）→ 代码仓 `README.md`。
 
 ## 6. 变更与版本
 

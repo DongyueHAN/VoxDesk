@@ -3,9 +3,9 @@
 | 字段 | 值 |
 | --- | --- |
 | 文档 | `docs/10-code-reading.md` |
-| 版本 | v1.0 |
+| 版本 | v1.1.0 |
 | 状态 | 现行 |
-| 更新 | 2026-11-10 21:00 +08:00 |
+| 更新 | 2026-11-11 23:20 +08:00 |
 | 生效范围 | 面向本项目（`D:\VoxDesk` / VoxDesk-Web）的阅读与实现方法；不含具体业务结论 |
 
 > 面向"vibe coding 生成了代码，但不知道它从哪来"的情况。
@@ -78,16 +78,14 @@ Evidence（实测数字 / 测试）
 
 ## 4. 本仓库逐模块读法（tts 之外）
 
-| 模块 | 先看什么 | 技术栈 | 常见改动点 |
-| --- | --- | --- | --- |
-| `server.py` | `do_GET/do_POST` 里的路径分支 | `http.server` | 加路由、改错误码、加静态文件 |
-| `voice_app.py` | `chat()` 的 8 个参数与分支 | 纯 Python 编排 | 改 prompt、加模式、接新工具 |
-| `llm.py` | `chat()` 与 `complete_with_tools()` | HTTP + JSON + SSE | 换模型、改工具轮数、流式输出 |
-| `search.py` | `execute_tool()` 与 `_cached()` | HTTP + 本地缓存 | 换检索源、改缓存 TTL |
-| `store.py` | `MAX_ACTIVE/MAX_ARCHIVE` 与原子写 | JSON 文件 | 改上限、加字段、迁移 schema |
-| `prompts.py` | `GENERAL_PROMPT` / `TOOLS` | 纯文本 + JSON Schema | 改人设、加工具定义 |
-| `timbre.py` | 频谱分析函数 | numpy | 改可视化参数 |
-| `static/app.js` | `getUserMedia` → 重采样 → `fetch` → `<audio>` | WebAudio | 改交互、加流式、加打断 |
+**模块清单以代码仓 `docs/ARCHITECTURE.md` 为准**，这里只给"按什么顺序读"：
+
+| 顺序 | 读什么 | 读完能回答 |
+| --- | --- | --- |
+| 1 | `server.py` 的 `do_GET/do_POST` 分支 | 一次请求怎么进来、落到哪个函数 |
+| 2 | `voice_app.py` 的 `chat()` | ASR → LLM → 存储 → TTS 怎么串起来 |
+| 3 | `llm.py` + `search.py` | 工具循环最多几轮、结果怎么回填 |
+| 4 | `store.py` + `prompts.py` | 数据落在哪、人设与工具 schema 在哪 |
 
 **读法示例（`server.py`）**：
 

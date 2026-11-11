@@ -3,9 +3,9 @@
 | 字段 | 值 |
 | --- | --- |
 | 文档 | `docs/09-web-implementation.md` |
-| 版本 | v1.1.0 |
+| 版本 | v1.2.0 |
 | 状态 | 现行 |
-| 更新 | 2026-11-11 22:05 +08:00 |
+| 更新 | 2026-11-11 23:20 +08:00 |
 | 生效范围 | 记录 `D:\VoxDesk` 在 `7e77b2e` 之后的实际实现状态；不改 02/04/05 的任何结论 |
 
 > 本文只回答一件事：**代码仓现在到底是什么、能跑什么、和原设计差在哪。**
@@ -32,49 +32,19 @@
 
 ### 3.1 通过项
 
-| 项 | 实测 |
-| --- | --- |
-| `/api/health` | `200`；`{"ok":true,"default_model":"deepseek-flash","api_key":true,"asr_loaded":true,"tts_loaded":true,"search":"deepseek","store":{"active":6,...}}` |
-| `/api/chat`（文字，不朗读） | `200`；reply 正常；`llm_ms=2109`；`model=deepseek-flash`；`tool_rounds=0` |
-| 会话持久化 | `data/chats` 已有 6 条，`active_bytes=18432` |
-| 冷启动 | 本次 `ASR 737.7ms · TTS 3280.5ms · 总 4019ms`（与 README 声称的 0.9s + 3.5–3.8s 一致） |
+**不在这里复述实测数字**——通过项与耗时以代码仓 `docs/STATUS.md` 为准（2026-11-06 对齐，w0.6）。
+本文只记**与设计不一致的部分**（§3.2 偏差、§4 覆盖、§5 偏离），那才是代码仓不会写的内容。
 
 ### 3.2 观察到的偏差（不是失败，是文档要对齐）
 
 | 偏差 | 现象 | 影响 |
 | --- | --- | --- |
 | `first_token_ms` 为 `null` | `/api/chat` 返回 `"first_token_ms": null` | 说明当前 LLM 调用是**非流式**；"首 token"指标暂时不可测 |
-| 冷启动波动大 | 同一台机器另一次冷启动为 `ASR 1788ms · TTS 9725ms · 总 11.5s` | 受磁盘缓存/杀软影响，README 的固定数字需加"波动范围" |
+| 冷启动波动大 | 同一台机器两次冷启动 4.0s ↔ 11.5s | 受磁盘缓存/杀软影响，固定数字须带"波动范围" |
 | 无自动化测试 | `git ls-files` 无 `test_*.py` | 回归靠手测；`docs/DEVELOPING.md` 要求的能力尚未落地 |
-| `/api/status`、`/api/sessions` 不存在 | 404 | 我按旧接口猜的路径无效；实际是 `/api/chats` |
+| 接口路径与预期不符 | `/api/status`、`/api/sessions` 均 404 | 实际是 `/api/chats`；**接口以代码仓为准**，本文不再抄一份 |
 
-## 4. 实际接口面（从代码读出，非文档转述）
-
-| 方法 | 路径 | 用途 |
-| --- | --- | --- |
-| GET | `/`、`/voice` | 主页面 / 声纹可视化 |
-| GET | `/api/health` | 模型与存储健康 |
-| GET | `/api/chats`、`/api/chats/<id>` | 会话列表 / 单条 |
-| GET | `/api/wav/<id>`、`/api/timbre/<id>` | 播放 wav / 音色分析 |
-| POST | `/api/asr` | 原始 PCM → 文本 |
-| POST | `/api/chat` | 一轮对话（可朗读、可联网） |
-| POST | `/api/chats`、`/api/chats/<id>/archive`、`/archive/<id>/restore` | 新建 / 归档 / 恢复 |
-| PATCH / DELETE | `/api/chats/<id>` | 重命名 / 删除 |
-
-## 5. 模块与职责
-
-| 文件 | 职责 | 关键技术 |
-| --- | --- | --- |
-| `server.py` | 路由、静态资源、错误处理 | `http.server.ThreadingHTTPServer` |
-| `voice_app.py` | ASR → LLM → 存储 → TTS 的编排 | 惰性加载、`clean_for_tts`、情感分类 |
-| `llm.py` | Chat Completions 客户端 + 工具循环 | SSE/JSON、工具最多 3 轮 |
-| `search.py` | Search / Fetch API 执行 | 缓存 + cache-bust、结果去重 |
-| `store.py` | 会话 JSON、30/100/1MB 上限 | `tmp + os.replace` 原子写 |
-| `prompts.py` | 系统提示词 + 工具 schema | 模式化 prompt、JSON Schema |
-| `timbre.py` | 声纹/音色分析 | 希尔伯特变换、FFT |
-| `static/app.js` | 录音、重采样、请求、播放 | WebAudio、PCM16、`<audio>` |
-
-## 6. 能力覆盖情况（对照 12 个组件）
+## 4. 能力覆盖情况（对照 12 个组件）
 
 | 组件 | 原定 | 现状 | 判定 |
 | --- | --- | --- | --- |
@@ -87,22 +57,21 @@
 | `CMP-11/12` | Harness / Obsidian | 无 | ⬜ |
 | `CMP-08/09` | 托盘 / 审计 | 无托盘；有本地 JSON 会话（非审计） | ⬜ |
 
-## 7. 与原设计的关键偏离
+## 5. 与原设计的关键偏离
 
 1. **推理出网**：`ADR-0005`（本地优先）在 Web 线被绕过——回答依赖 DeepSeek；只有 ASR/TTS 在本地。
 2. **形态变化**：桌面应用 → 浏览器应用；全局热键只能在页面聚焦时生效。
 3. **范围扩张**：多了联网工具、陪伴模式、声纹可视化、会话存储——这些在 02 需求池里**没有对应条目**。
 4. **范围收缩**：VAD 自动断句、KWS、打断、工具执行、调度都没有。
 
-## 8. 对系统文档的结论
+## 6. 对系统文档的结论
 
-- `04-tech-stack.md` 与 `02-requirements.md` 的"待确认"仍然悬空（见 `05-roadmap.md` §5），**但实现已经跑到文档前面**；
-- 因此 `05-roadmap.md` 的"M0 收尾 → v1.0 冻结 → 进入 M1"已不符合事实：M1/M2 的部分能力被 Web 线部分覆盖；
-- 建议（需需求方批准后再动 `05`）：把里程碑改为"双线"——
-  - **A 线（原框架）**：按 05 继续 M2 收尾（S5 本地 LLM / S7 串联）；
-  - **B 线（Web 线）**：以 `09` 为基线补 VAD、流式、打断，再决定是否回填 A 线。
+- 本文写作时（2026-11-10）"实现跑到文档前面"；**该结论已由 `v1.3.0` 处理**，不再是悬空项：
+- `05-roadmap.md` 已改双线基线（2026-11-11 批准）：**A 线**按 M2 收尾（S5 本地 LLM / S7 串联），
+  **B 线**以本文为基线补 VAD、流式、打断，再决定是否回填 A 线；
+- 仍属于 B 线自己的缺口（**未**由文档解决）：VAD 自动断句、流式首字、打断、鉴权/SSRF 加固、单测。
 
-## 9. 风险清单
+## 7. 风险清单
 
 | 风险 | 说明 | 建议 |
 | --- | --- | --- |

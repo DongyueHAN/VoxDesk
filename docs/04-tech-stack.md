@@ -3,9 +3,9 @@
 | 字段 | 值 |
 | --- | --- |
 | 文档 | `docs/04-tech-stack.md` |
-| 版本 | v0.3.0 |
+| 版本 | v0.3.1 |
 | 状态 | 部分确认（选型已定；LLM 运行时待定） |
-| 更新 | 2026-11-10 22:05 +08:00 |
+| 更新 | 2026-11-11 22:05 +08:00 |
 | 生效范围 | 语言选型、框架选型、四层技术栈落地 |
 
 > **本版重大变化**：由"云优先"改为**本地优先**；由"全双工"改为**半双工先行**。
@@ -277,24 +277,9 @@ vad:
 | **ACP** | 按协议双向通信，支持中途插入指令 | harness 支持 ACP 时体验最好 | P2 |
 | **MCP（反向暴露）** | 把 `speak()` / `ask_user()` 包成 MCP server 供 harness 调用 | 让 harness 借嘴说话 | P3 |
 
-```mermaid
-%% diagram: IF-06 Harness 桥 | updated: 2026-10-26
-sequenceDiagram
-    participant CE as CMP-03 认知引擎
-    participant HB as CMP-11 Harness 桥
-    participant H as 外部 Agent Harness
-    participant TTS as CMP-07 播报器
-    CE->>HB: 判定为复杂任务，转交
-    HB->>H: spawn(cli, prompt, workdir)
-    loop 流式事件
-        H-->>HB: step 事件（正在检索…）
-        HB-->>CE: 摘要事件
-        CE->>TTS: 播报进度（可合并/可跳过）
-    end
-    H-->>HB: final（完成了）
-    HB-->>CE: 最终结果
-    CE->>TTS: 播报结论
-```
+> **时序不复述**：见 [`03-architecture.md`](03-architecture.md) §4.4 `FLOW-05`（委托 Harness）。
+> 本节只回答"用哪种接法"；"一轮怎么走"以 `03` 为唯一来源，避免两处时序各自漂移。
+> （此前这里有一张自编号 `IF-06` 的图，与接口 `IF-06` 撞名，已按 `00-spec` §7.1 退役。）
 
 **关键约束**：harness 输出是**长文本流**，不能逐字播报——必须"关键节点摘要 + 结尾总结"两级策略，否则用户会被念代码。
 

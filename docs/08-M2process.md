@@ -3,9 +3,9 @@
 | 字段 | 值 |
 | --- | --- |
 | 文档 | `docs/08-M2process.md` |
-| 版本 | v0.2.0 |
+| 版本 | v0.2.1 |
 | 状态 | 草案 |
-| 更新 | 2026-11-05 22:10 +08:00 |
+| 更新 | 2026-11-11 22:05 +08:00 |
 | 生效范围 | M2 的四段冲刺、闸门、显存与时延预算；**不改** `05-roadmap.md` 的里程碑定义 |
 
 > **本文接在 [`archive/12-M1process.md`](archive/12-M1process.md) 后面。**
@@ -90,7 +90,7 @@ M1 的音频链路几乎不吃显存（VAD 2.3MB、Piper 60MB 走 CPU）。M2 �
 | Piper + VAD + Python | 0.62 GB | ~0 |
 | **合计** | **≈ 4.7 GB** | **≈ 4.5 GB** |
 
-本机 16 GB 内存 + RTX 4060 8 GB 显存，**单独跑 M2 绰绰有余**；但到 M6 加 CosyVoice 时，8 GB 显存会同时被 LLM 与 TTS 抢（见 `09` §11.5）。
+本机 16 GB 内存 + RTX 4060 8 GB 显存，**单独跑 M2 绰绰有余**；但到 M6 加 CosyVoice 时，8 GB 显存会同时被 LLM 与 TTS 抢（见 [`archive/09-tts-module.md`](archive/09-tts-module.md) §11.5）。
 
 > **M2 阶段先别把 LLM 塞进显存**：4B 在 CPU 上首 token 约 0.9s，已经够用；把显存留给 M6。
 

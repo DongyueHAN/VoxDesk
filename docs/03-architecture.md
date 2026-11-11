@@ -3,9 +3,9 @@
 | 字段 | 值 |
 | --- | --- |
 | 文档 | `docs/03-architecture.md` |
-| 版本 | v0.2.0 |
+| 版本 | v0.3.0 |
 | 状态 | 草案 |
-| 更新 | 2026-10-26 14:30 +08:00 |
+| 更新 | 2026-11-11 22:05 +08:00 |
 | 生效范围 | 组件划分、交互流程、状态、领域模型 |
 
 > **本版变化**：逻辑分层由"9 个平铺组件"改为 **5 层 + 2 个跨层基础件**；语音链路由"云"改为"本机"；会话模型由"全双工"改为"半双工 + 通道仲裁"。
@@ -276,7 +276,48 @@ flowchart LR
     CTX --> ANS["LLM 生成回答<br/>附笔记路径"]
 ```
 
-### 4.6 SM-01 会话状态机（半双工）
+### 4.6 FLOW-03 Agent 执行体（ReAct 多步计划）
+
+`FLOW-01` 只覆盖"一次工具调用就结束"的情形；需要**多轮 思考 → 行动 → 观察**的请求（`REQ-F-040`~`REQ-F-043`）由 `CMP-05` 接管，
+决策依据见 `ADR-0004`。`CMP-03` 只决定"要 plan"，不亲自执行循环。
+
+```mermaid
+%% diagram: FLOW-03 Agent 执行 | updated: 2026-11-11
+sequenceDiagram
+    autonumber
+    actor U as 用户
+    participant GW as CMP-02 会话网关
+    participant CE as CMP-03 认知引擎
+    participant AR as CMP-05 Agent 执行体
+    participant TR as CMP-04 工具运行时
+    participant AU as CMP-09 存储与审计
+    participant TTS as CMP-07 播报器
+
+    U->>GW: "查三个 AI 会议并整理成三条"
+    GW->>CE: Understand(context, text)
+    CE->>CE: Decision = plan（单步工具调用不足以完成）
+    CE->>AR: Plan(task)
+    loop 步数 ≤ 8 且总时长 ≤ 60s（ADR-0004 硬性上限）
+        AR->>AR: Thought：下一步做什么
+        AR->>TR: Act：Execute(tool_name, args)
+        TR-->>AR: Observation：ToolResult
+        AR->>AU: 记录 step（可回放）
+        opt 命中危险操作
+            TR-->>CE: 需确认
+            CE->>TTS: Speak("即将删除 X，确认吗")
+            U->>GW: "确认"
+            GW->>TR: 放行
+        end
+    end
+    AR-->>CE: 汇总结论（≤ 3 句）
+    CE->>TTS: Speak(结论)
+    TTS-->>U: 播报
+```
+
+**硬性上限**（`ADR-0004`）：步数 ≤ 8、总时长 ≤ 60 s；任一上限触发即中止，并播报"已经做了 N 步，还差什么"，
+不静默失败。危险操作**不因"写在计划里"而免确认**——确认点仍在 `CMP-04` 执行前（同 `FLOW-01` 规则）。
+
+### 4.7 SM-01 会话状态机（半双工）
 
 ```mermaid
 %% diagram: SM-01 状态机 | updated: 2026-10-26
@@ -303,7 +344,7 @@ stateDiagram-v2
 
 > 注意：**没有** `Speaking → Listening` 的"语音打断"路径，那是全双工；半双工下打断只由热键触发。
 
-### 4.7 DM-01 领域类图
+### 4.8 DM-01 领域类图
 
 ```mermaid
 %% diagram: DM-01 领域模型 | updated: 2026-10-26

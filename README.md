@@ -5,7 +5,7 @@
 
 | 项 | 值 |
 | --- | --- |
-| 版本 | **v1.2.1**（2026-11-11 修复 `archive/` 内失效链接；v1.2.0 = 龙骨 + 选型决策落地） |
+| 版本 | **v1.3.0**（2026-11-11 悬空引用与图 ID 校正；v1.2.0 = 龙骨 + 选型决策落地） |
 | 当前阶段 | **双线**：A 线（原框架）M2 收尾；B 线（Web）已跑到 w0.6，见 `09` |
 | 代码仓 | `D:\VoxDesk`（`master` 主线 · `demo/deepseek-voice` 演示） |
 | 权威源 | 本仓 `docs/`；聊天记录与口头结论不算数 |
@@ -87,7 +87,7 @@
 | [`docs/00-spec.md`](docs/00-spec.md) | 文档规范：版本、时间戳、编号、图规范、ADR 生命周期 |
 | [`docs/01-scope.md`](docs/01-scope.md) | 范围、场景、非目标、成功标准 |
 | [`docs/02-requirements.md`](docs/02-requirements.md) | 需求池 67 条（`REQ-*`）+ Intent/Requirements 讨论 |
-| [`docs/03-architecture.md`](docs/03-architecture.md) | **权威架构**：C4、6 条时序、半双工状态机、领域类图 |
+| [`docs/03-architecture.md`](docs/03-architecture.md) | **权威架构**：C4、6 条流程（`FLOW-01`~`06`）、半双工状态机、领域类图 |
 | [`docs/04-tech-stack.md`](docs/04-tech-stack.md) | 技术栈与选型理由（含端侧四项） |
 | [`docs/05-roadmap.md`](docs/05-roadmap.md) | 里程碑拆解 M0–M7 |
 | [`docs/06-reference-landscape.md`](docs/06-reference-landscape.md) | 小爱 / OpenClaw / 竞品对照 |

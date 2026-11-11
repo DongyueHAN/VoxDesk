@@ -1,13 +1,14 @@
 # VoxDesk · 系统文档仓
 
-> **这个仓库回答"为什么做、做成什么样"，代码仓回答"实际做成什么样"。**
+> **本文件是文档区的门面；仓根 `README.md` 是总门面（含怎么跑）。**
+> 文档区回答"为什么做、做成什么样"，`docs/impl/` 回答"实际做成什么样"。
 > 原型阶段以图与文字交付，不写实现代码（`REQ-C-001`）；想跑起来看代码仓。
 
 | 项 | 值 |
 | --- | --- |
 | 版本 | **v2.1.0**（2026-11-12 `08` 改造为进度看板 · `07` 补 M8–M10 · 组 C/D 重划；v2.0.0 = 方向性调整） |
 | 当前阶段 | **双线**（2026-11-11 批准）：A 线 M2 收尾（S4 ✅ / S5 起步）；B 线 w0.6 已验收，下一个是 w0.7 |
-| 代码仓 | `D:\VoxDesk`（`master` 主线 · `demo/deepseek-voice` 演示） |
+| 所在 | 本仓 `docs/system/`（v2.2.0 起与代码同仓） |
 | 权威源 | 本仓 `docs/`；聊天记录与口头结论不算数 |
 
 ## 1. 龙骨：Intent → Specification → Implement
@@ -42,7 +43,7 @@
 
 | 层 | 位置 |
 | --- | --- |
-| **Implement** | 代码仓 `D:\VoxDesk`：`audio/`、`tts/`、`server.py`、`voice_app.py` 等 |
+| **Implement** | 本仓仓根：`audio/`、`tts/`、`server.py`、`voice_app.py` 等 |
 | **Evidence** | 代码仓 `docs/STATUS.md` 的实测数字；`docs/PITFALLS.md` 的坑 |
 
 ### 1.4 两个仓库怎么分工
@@ -50,7 +51,7 @@
 | 仓库 | 管什么 | 谁读 | 入口 |
 | --- | --- | --- | --- |
 | **系统仓（本仓）** | Intent + Specification：范围、需求、架构、选型、里程碑、ADR | 人（定方向）、agent（理解约束） | 本文件 §1 → `docs/01-scope.md` → `docs/03-architecture.md` |
-| **代码仓** `D:\VoxDesk` | Implement + Evidence：能跑的代码、实测数字、交接清单 | 人（跑起来）、agent（改代码） | 代码仓 `README.md` → `docs/STATUS.md` → `docs/HANDOFF.md` |
+| **实现区** `docs/impl/` + 仓根代码 | Implement + Evidence：能跑的代码、实测数字、交接清单 | 人（跑起来）、agent（改代码） | 仓根 `README.md` → `docs/impl/STATUS.md` → `docs/impl/HANDOFF.md` |
 
 一条规矩：**同一事实只写在一边**。实测数字与接口以代码仓为准；范围、需求与决策以本仓为准。
 

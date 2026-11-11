@@ -46,7 +46,7 @@ web/w0.6（默认/集成分支）
 
 - 可演示节点用 `w0.x` tag；正式开发用语义化版本。
 - 每次发布写 changelog：新增、修复、破坏性变更、已知问题。
-- 版本记录维护在 [`CHANGELOG.md`](../CHANGELOG.md)。
+- 版本记录维护在 [`CHANGELOG.md`](../../CHANGELOG.md)。
 
 ## 3. 本地质量门
 

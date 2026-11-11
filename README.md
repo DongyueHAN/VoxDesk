@@ -1,13 +1,39 @@
-# VoxDesk-Web
+# VoxDesk
 
-> 在浏览器里说一句话 / 打一句话，完成「语音识别 → DeepSeek 回答 → 文字 + 朗读」。
-> 一个本地优先、无前端框架、无构建的语音对话 Web 应用。
+> 一个跑在自己电脑上的**多模态助手**：**两入口 · 一脑子 · 三出口**。
+> 说话或截屏进来，接本地知识库与大模型，声音出去、形象同步动、该动手时动手。
+
+## 这个项目要做什么（Intent）
+
+```
+入口 ① ASR  语音 → 文本   ┐
+入口 ② OCR  图像 → 文本   ┘→  脑子：LLM + 本地知识库  →  出口 ① TTS   说（可定制音色）
+                                                        出口 ② 皮套人 演
+                                                        出口 ③ 类 agent 做
+```
+
+**现在的实现进度：只有“说”这一路（入口 ① → 脑子 → 出口 ①）跑通了。**
+看（OCR）、演（皮套人）、做（agent 输出）都还停在规范阶段，代码未落地——见 [`docs/system/docs/08-M2process.md`](docs/system/docs/08-M2process.md) §0 的进度看板。
+
+完整意图与边界：[`docs/system/docs/01-scope.md`](docs/system/docs/01-scope.md)；
+需求 93 条：[`docs/system/docs/02-requirements.md`](docs/system/docs/02-requirements.md)；
+架构 14 组件：[`docs/system/docs/03-architecture.md`](docs/system/docs/03-architecture.md)。
+
+## 这个仓有两个区
+
+| 区 | 路径 | 放什么 | 谁读 |
+| --- | --- | --- | --- |
+| **规范区** | `docs/system/` | Intent / 范围 / 需求 / 架构 / 选型链 / 路线 / 决策 / 分工 | 想改设计的人、agent 开工前 |
+| **实现区** | `docs/impl/` | 状态、坑、实现决策、开发流程、发布说明 | 要改代码的人 |
+| **代码** | 仓根 | `server.py`、`voice_app.py`、`static/` … | — |
+
+> 一条规矩：**同一事实只写在一边**。实测数字与接口签名在 `docs/impl/`；规范与决策在 `docs/system/`。
 
 ## 项-值
 
 | 项 | 值 |
 | --- | --- |
-| 项目 | **VoxDesk-Web** |
+| 项目 | **VoxDesk**（当前实现：VoxDesk-Web） |
 | 版本 | **w0.6** |
 | 形态 | 本地 Web 应用：浏览器 + 单进程 Python 服务 |
 | 生成模型 | DeepSeek **`deepseek-flash`**（V4.1-Flash-1017） |
@@ -126,7 +152,9 @@ VoxDesk-Web/
 ├─ audio/                 ASR 源码 + 模型（结构不变）
 ├─ tts/                   TTS 源码 + 模型（结构不变）
 ├─ data/                  会话与归档（gitignore）
-├─ docs/                  架构、状态、坑、计划、发布说明
+├─ docs/
+│  ├─ system/             规范区：Intent / 需求 / 架构 / 选型 / 路线 / 决策 / 分工（13 份）
+│  └─ impl/               实现区：状态、坑、实现决策、开发流程、发布
 └─ out/                   运行时 wav / 临时产物（gitignore）
 ```
 
@@ -209,23 +237,34 @@ http://127.0.0.1:8800/api/health
 
 ## 文档阅读顺序（开发者 / Agent）
 
+### 先读规范区（决定“该不该做、做成什么样”）
+
+| 顺序 | 文档 | 解决什么 |
+| --- | --- | --- |
+| S1 | [`docs/system/README.md`](docs/system/README.md) | 文档区门面：四组 13 份怎么读 |
+| S2 | [`docs/system/docs/01-scope.md`](docs/system/docs/01-scope.md) | 做什么、不做什么、**两入口三出口** |
+| S3 | [`docs/system/docs/03-architecture.md`](docs/system/docs/03-architecture.md) | 14 个组件、10 个接口、8 条流程 |
+| S4 | [`docs/system/docs/11-decisions.md`](docs/system/docs/11-decisions.md) | 什么还悬着（`DEC-0xx`）——动架构前必查 |
+
+### 再读实现区（决定“怎么改代码”）
+
 > 这是正常开发仓库，不是一次性 demo。先读文档，再改代码；不要只看 README 就直接开工。
 
 | 顺序 | 文档 | 解决什么 | 什么时候读 |
 | --- | --- | --- | --- |
 | 1 | [`README.md`](README.md) | 项目是什么、能做什么、怎么跑 | 每次开工前 |
-| 2 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | 数据流、接口、存储、线程模型 | 改任何链路前 |
-| 3 | [`docs/STATUS.md`](docs/STATUS.md) | 当前能力、实测数字、已知缺口 | 判断“现在到底能做什么” |
-| 4 | [`docs/PITFALLS.md`](docs/PITFALLS.md) | 46 个坑与修正 | 改音频/模型/前端/存储前 |
-| 5 | [`docs/PLAN.md`](docs/PLAN.md) | P1 结果、P2/P3 优先级 | 排期和拆任务前 |
-| 6 | [`docs/DEVELOPING.md`](docs/DEVELOPING.md) | 正常开发流程：分支、测试、依赖、发布 | 写第一行代码前 |
-| 7 | [`docs/SECURITY.md`](docs/SECURITY.md) | 密钥、隐私、SSRF、数据、许可 | 动网络/文件/密钥前 |
-| 8 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | 关键架构决策与取舍 | 想改架构/换模型前 |
-| 9 | [`docs/GLOSSARY.md`](docs/GLOSSARY.md) | 模型、运行时、英文缩写 | 读架构/写答辩/交接前 |
-| 10 | [`docs/PUBLISH.md`](docs/PUBLISH.md) | GitHub 分支、安装包、发布 | 发布/演示前 |
-| 11 | [`docs/HANDOFF.md`](docs/HANDOFF.md) | 原框架历史交接 | 只在追溯原框架时读，**不是当前 Web 规范** |
+| 2 | [`docs/impl/ARCHITECTURE.md`](docs/impl/ARCHITECTURE.md) | 数据流、接口、存储、线程模型 | 改任何链路前 |
+| 3 | [`docs/impl/STATUS.md`](docs/impl/STATUS.md) | 当前能力、实测数字、已知缺口 | 判断“现在到底能做什么” |
+| 4 | [`docs/impl/PITFALLS.md`](docs/impl/PITFALLS.md) | 46 个坑与修正 | 改音频/模型/前端/存储前 |
+| 5 | [`docs/impl/PLAN.md`](docs/impl/PLAN.md) | P1 结果、P2/P3 优先级 | 排期和拆任务前 |
+| 6 | [`docs/impl/DEVELOPING.md`](docs/impl/DEVELOPING.md) | 正常开发流程：分支、测试、依赖、发布 | 写第一行代码前 |
+| 7 | [`docs/impl/SECURITY.md`](docs/impl/SECURITY.md) | 密钥、隐私、SSRF、数据、许可 | 动网络/文件/密钥前 |
+| 8 | [`docs/impl/DECISIONS.md`](docs/impl/DECISIONS.md) | 关键架构决策与取舍 | 想改架构/换模型前 |
+| 9 | [`docs/impl/GLOSSARY.md`](docs/impl/GLOSSARY.md) | 模型、运行时、英文缩写 | 读架构/写答辩/交接前 |
+| 10 | [`docs/impl/PUBLISH.md`](docs/impl/PUBLISH.md) | GitHub 分支、安装包、发布 | 发布/演示前 |
+| 11 | [`docs/impl/HANDOFF.md`](docs/impl/HANDOFF.md) | 原框架历史交接 | 只在追溯原框架时读，**不是当前 Web 规范** |
 
-> 版本记录：[`CHANGELOG.md`](CHANGELOG.md)。发布前先看 `docs/PUBLISH.md`。
+> 版本记录：[`CHANGELOG.md`](CHANGELOG.md)（代码版本线）。**文档区有自己的版本线**：[`docs/system/CHANGELOG.md`](docs/system/CHANGELOG.md)。发布前先看 `docs/impl/PUBLISH.md`。
 >
 > 当前 Web 运行路径是根目录的 `server.py`、`voice_app.py`、`static/`；`demo/`、`audio/scripts/`、
 > `VoxDeskVoice/` 属于原框架历史内容，不是当前 Web 的启动路径，除非任务明确要求兼容原框架。
@@ -235,7 +274,7 @@ http://127.0.0.1:8800/api/health
 1. **先看仓库状态**：`git status --short`、当前分支、最近提交；不要在有未提交改动时直接覆盖。
 2. **按上表顺序读文档**，至少读 1–6；不要用旧对话里的路径/结论替代当前文档。
 3. **先复现基线**：启动服务，检查 `/api/health`；不能复现基线就不改功能。
-4. **先计划后编码**：涉及架构、模型、存储、API 的改动，先写 `docs/DECISIONS.md` 或任务拆分。
+4. **先计划后编码**：涉及架构、模型、存储、API 的改动，先写 `docs/impl/DECISIONS.md` 或任务拆分。
 5. **最小改动**：一次只解决一个问题；不要顺手重构无关模块，不要批量重写前端。
 6. **不碰受保护边界**：模型文件、`data/`、`.env`、`out/`、`defense/` 不入库；不提交大二进制。
 7. **必须验证**：`py_compile`、`node --check`、API smoke test；改了 UI 要跑浏览器验证；改了存储要测边界。
@@ -254,7 +293,7 @@ http://127.0.0.1:8800/api/health
 | 安全 | 本机单用户 | 鉴权、限流、SSRF、密钥管理 |
 | 发布 | 直接覆盖 | tag、changelog、回滚方案 |
 
-正式流程和检查清单见 [`docs/DEVELOPING.md`](docs/DEVELOPING.md)。
+正式流程和检查清单见 [`docs/impl/DEVELOPING.md`](docs/impl/DEVELOPING.md)。
 
 ## 致谢 Acknowledgements
 

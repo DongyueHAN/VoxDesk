@@ -1,11 +1,12 @@
-# AGENTS.md · VoxDesk 开发规约
+# AGENTS.md · VoxDesk 开发规约（一个仓，两个区）
 
 > 给没有上下文的新对话用。先读 `README.md` 的文档顺序，再按本文执行。
-> 当前仓库：`D:\VoxDesk`；当前集成分支：`web/w0.6`。
+> 当前仓库：`D:\VoxDesk`；当前集成分支：`web/w0.6`。`2026-11-12` 起系统文档仓并入本仓 `docs/system/`。
 
 ## 1. 这个仓库是什么
 
 - **语音桌面 / 浏览器语音对话应用**：麦克风或桌面音频 → ASR → DeepSeek → TTS。
+- **两个区**：`docs/system/` 是规范区（Intent / 需求 / 架构 / 选型 / 决策），`docs/impl/` 是实现与证据区（状态、坑、决策记录）。**规范改动走 `docs/system/AGENTS.md`，代码改动走本文。**
 - 已从快速 demo 阶段进入**正常开发阶段**；保留可演示能力，但不再接受“先跑通、后补设计”。
 - 原框架的 `demo/`、`audio/`、`tts/` 历史仍在其他分支；当前 Web 实现是主线。
 - `D:\VoxDesk-Web` 是本地参考/旧工作副本，**不是运行源码**；不要在那边改完再手工同步。
@@ -14,17 +15,19 @@
 
 | 顺序 | 文件 | 解决什么 |
 | --- | --- | --- |
+| 0 | `docs/system/README.md` | **Intent、需求、架构**——先看它再动代码 |
 | 1 | `README.md` | 是什么、能做什么、怎么跑、文档顺序 |
-| 2 | `docs/ARCHITECTURE.md` | 数据流、接口、存储、线程模型 |
-| 3 | `docs/STATUS.md` | 当前能力、实测数字、缺口 |
-| 4 | `docs/PITFALLS.md` | 46 个坑，别重踩 |
-| 5 | `docs/PLAN.md` | P1 结果、P2/P3 优先级 |
-| 6 | `docs/DEVELOPING.md` | 分支、测试、依赖、发布流程 |
-| 7 | `docs/SECURITY.md` | 密钥、隐私、SSRF、许可 |
-| 8 | `docs/DECISIONS.md` | 架构决策与取舍 |
-| 9 | `docs/GLOSSARY.md` | 模型、运行时、英文缩写 |
-| 10 | `docs/PUBLISH.md` | 发布/安装包流程 |
-| 11 | `docs/HANDOFF.md` | 原框架历史，仅在追溯时读 |
+| 2 | `docs/impl/ARCHITECTURE.md` | 数据流、接口、存储、线程模型 |
+| 3 | `docs/impl/STATUS.md` | 当前能力、实测数字、缺口 |
+| 4 | `docs/impl/PITFALLS.md` | 46 个坑，别重踩 |
+| 5 | `docs/impl/PLAN.md` | P1 结果、P2/P3 优先级 |
+| 6 | `docs/impl/DEVELOPING.md` | 分支、测试、依赖、发布流程 |
+| 7 | `docs/impl/SECURITY.md` | 密钥、隐私、SSRF、许可 |
+| 8 | `docs/impl/DECISIONS.md` | 架构决策与取舍 |
+| 9 | `docs/impl/GLOSSARY.md` | 模型、运行时、英文缩写 |
+| 10 | `docs/impl/PUBLISH.md` | 发布/安装包流程 |
+| 11 | `docs/impl/HANDOFF.md` | 原框架历史，仅在追溯时读 |
+| 12 | `docs/system/docs/11-decisions.md` | 还悬着什么（`DEC-0xx`）；动架构前先查 |
 
 ## 3. 硬约束
 
@@ -41,7 +44,7 @@
 
 - 先 `git status --short`、`git branch --show-current`、`git log -5`；有未提交改动先说明。
 - 一个分支/PR 只做一件事；默认分支不堆实验代码。
-- 涉及架构、模型、存储、API 的改动，先写/更新 `docs/DECISIONS.md`。
+- 涉及架构、模型、存储、API 的改动，先写/更新 `docs/impl/DECISIONS.md`。
 - 不顺手重构无关模块；不批量重写前端；不引入框架/构建工具，除非有 ADR。
 - 不提交模型、数据、wav、截图、`.env`、缓存。
 - 禁止 `git add -A`；显式 add。
@@ -76,13 +79,13 @@ Invoke-WebRequest http://127.0.0.1:8800/ -UseBasicParsing | Select-Object Status
 
 | 改了 | 更新 |
 | --- | --- |
-| API `/api/*`、数据流、线程 | `docs/ARCHITECTURE.md` |
-| 能力、实测数字 | `docs/STATUS.md` |
-| 新坑/绕过旧坑 | `docs/PITFALLS.md` |
-| 计划/优先级 | `docs/PLAN.md` |
-| 架构/模型/存储取舍 | `docs/DECISIONS.md` |
-| 模型/缩写 | `docs/GLOSSARY.md` |
-| 发布/安装 | `docs/PUBLISH.md` |
+| API `/api/*`、数据流、线程 | `docs/impl/ARCHITECTURE.md` |
+| 能力、实测数字 | `docs/impl/STATUS.md` |
+| 新坑/绕过旧坑 | `docs/impl/PITFALLS.md` |
+| 计划/优先级 | `docs/impl/PLAN.md` |
+| 架构/模型/存储取舍 | `docs/impl/DECISIONS.md` |
+| 模型/缩写 | `docs/impl/GLOSSARY.md` |
+| 发布/安装 | `docs/impl/PUBLISH.md` |
 | 版本发布记录 | `CHANGELOG.md` |
 
 ## 7. 禁止事项
@@ -113,3 +116,14 @@ Invoke-WebRequest http://127.0.0.1:8800/ -UseBasicParsing | Select-Object Status
 - [ ] `git status` 只包含预期文件
 - [ ] 提交信息说明“为什么/怎么测/风险”
 - [ ] 需要发布时更新 tag/changelog
+
+## 9. 文档区（`docs/system/`）的三条硬规则
+
+| 规则 | 说明 |
+| --- | --- |
+| **ID 永不复用** | `REQ-` / `CMP-` / `IF-` / `FLOW-` / `ADR-` / `DEC-` / `CHG-` 一经分配不删不重排 |
+| **改文档也走流程** | 改正文 → 刷头部 `版本/更新` → `CHANGELOG` 追加 → 提交；MINOR 及以上打 tag |
+| **事实只有一个地方** | 实测数字与接口签名只写在 `docs/impl/`；规范只写在 `docs/system/`，两边只互相引用 |
+
+> 完整规则见 `docs/system/AGENTS.md`；文档规范（字段、图、编号）见 `docs/system/docs/00-spec.md`。
+> 两个 AGENTS 冲突时：**代码行为以本文件为准，文档格式以 `docs/system/AGENTS.md` 为准**。

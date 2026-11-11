@@ -3,16 +3,36 @@
 本项目从快速 demo 进入正常开发后，发布记录以本文 + Git tag 为准。
 格式参考 Keep a Changelog；版本号按需使用 `w0.x` / SemVer。
 
+## [w0.7] - 2026-11-12
+
+### Added
+
+- **系统文档并入本仓**：`docs/system/` 以 `git subtree` 引入（保留文档历史），形成"一个仓两个区"
+- `docs/system/docs/adr/ADR-0011-single-repo.md`：合仓决策，取代 `ADR-0010`（两仓独立）
+- 根 `README.md` 增加 Intent 段（两入口 · 一脑子 · 三出口）与两区说明
+
+### Changed
+
+- 代码仓原有 10 份实现文档从 `docs/*.md` 移到 **`docs/impl/*.md`**，内容未改
+- 根 `AGENTS.md` 改为"一个仓两个区"：代码行为以根文件为准，文档格式以 `docs/system/AGENTS.md` 为准
+- `REQ-C-001` 由"只交付架构与图"改为"**文档区**只交付架构与图"
+- `00-spec` §3 目录树标注"以文档区根为基准"
+
+### Removed
+
+- `demo.mp4`（33MB 演示视频）从工作区与索引移除；历史仍在，需要时从历史取
+
+---
 ## [Unreleased]
 
 ### Added
 
-- 正常开发文档：`docs/DEVELOPING.md`、`docs/SECURITY.md`、`docs/DECISIONS.md`、`docs/GLOSSARY.md`
+- 正常开发文档：`docs/impl/DEVELOPING.md`、`docs/impl/SECURITY.md`、`docs/impl/DECISIONS.md`、`docs/impl/GLOSSARY.md`
 - README 文档阅读顺序与 Agent 开工规则
 
 ### Changed
 
-- 发布流程改为以 `D:\VoxDesk` 主仓库 + GitHub Desktop 为准
+- 发布流程改为以本仓主仓库 + GitHub Desktop 为准
 - 明确 `web_fetch` SSRF、鉴权、CI、依赖锁定等待办
 
 ### Fixed

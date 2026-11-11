@@ -46,3 +46,8 @@ desktop.ini
 out/
 data/
 *.log
+
+# ---- 文档区（docs/system）带来的条目 ----
+调研/
+灵感与开会/
+/*.html

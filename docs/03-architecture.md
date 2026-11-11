@@ -3,10 +3,10 @@
 | 字段 | 值 |
 | --- | --- |
 | 文档 | `docs/03-architecture.md` |
-| 版本 | v0.4.0 |
+| 版本 | v0.5.0 |
 | 状态 | 草案 |
-| 更新 | 2026-11-11 22:12 +08:00 |
-| 生效范围 | 组件划分、交互流程、状态、领域模型；**A 线用 `C4-01`，B 线用 `C4-02`（§3.3）** |
+| 更新 | 2026-11-12 01:30 +08:00 |
+| 生效范围 | 组件划分（14 个）、交互流程（8 条）、状态、领域模型；**A 线用 `C4-01`，B 线用 `C4-02`（§3.3）** |
 
 > **位置**：组 A · **定义 3/3**：内部怎么搭
 
@@ -51,14 +51,17 @@ flowchart LR
 
 ## 3. C4-L2 容器图
 
-5 层 + 2 个基础件，同进程；只有推理服务是独立进程（便于换引擎）。
+5 层 + 2 个基础件，共 **14 个组件**，同进程；只有推理服务是独立进程（便于换引擎）。
+`CMP-13`（OCR）与 `CMP-14`（形象驱动）是 2026-11-12 按新 intent 新增的两个"出入口"。
 
 ```mermaid
-%% diagram: C4-01 容器图 | updated: 2026-10-26
+%% diagram: C4-01 容器图 | updated: 2026-11-12
 flowchart TB
     subgraph EDGE["① 端侧"]
         FE["CMP-01 语音前端<br/>采集 · 降噪 · VAD · KWS/PTT · ASR"]
-        TTS["CMP-07 播报器<br/>本地 TTS · 分句流式 · 打断"]
+        TTS["CMP-07 播报器<br/>本地 TTS · 分句流式 · 打断 · 音色"]
+        OCR["CMP-13 OCR 引擎<br/>屏幕 · 摄像头 · 图片"]
+        AV["CMP-14 形象驱动<br/>viseme · 表情 · 姿态"]
     end
     subgraph DIALOG["② 对话层"]
         GW["CMP-02 会话网关<br/>半双工状态机 · 通道仲裁"]
@@ -98,6 +101,10 @@ flowchart TB
     KB <-->|"文件 / URI"| V[["Obsidian Vault"]]
     GW -- "回复文本" --> TTS
     TTS -- "声音" --> U
+    U -- "截图 / 摄像头 / 图片" --> OCR
+    OCR -- "文本块" --> GW
+    GW -. "驱动帧（异步）" .-> AV
+    AV -- "形象" --> U
     UI <--> GW
 ```
 
@@ -117,6 +124,8 @@ flowchart TB
 | **CMP-10** | **本地推理服务** | 把模型跑起来，并管理其生命周期 | `messages + tools` → 流式 token |
 | **CMP-11** | **Harness 桥** | 把复杂任务翻译成对 harness 的调用 | 任务 → 摘要事件流 |
 | **CMP-12** | **知识接入** | 把本地笔记变成可检索的知识 | 查询 → 片段 + 引用 |
+| **CMP-13** | **OCR 引擎** | 把图像变成可读文本（屏幕 / 摄像头 / 文件） | 图像 → `TextBlock[]` |
+| **CMP-14** | **形象驱动** | 把回答变成看得见的动作（口型 / 表情 / 姿态） | `frame` → 渲染指令 |
 
 ### 3.2 关键接口
 
@@ -130,6 +139,8 @@ flowchart TB
 | **IF-06** | **`Delegate(task, workdir) -> event_stream`** | **CMP-11** | **摘要级事件，非逐字** |
 | **IF-07** | **`Search(query, k) -> Chunk[]`** | **CMP-12** | **带来源路径与行号** |
 | **IF-08** | **`Chat(messages, tools) -> token_stream`** | **CMP-10** | **OpenAI 兼容** |
+| **IF-09** | **`Recognize(image, source) -> TextBlock[]`** | **CMP-13** | **带置信度与版面坐标；三来源归一** |
+| **IF-10** | **`DriveAvatar(frame) -> void`** | **CMP-14** | **异步投递；`frame` = {viseme, emotion, motion, text}；渲染器可换** |
 
 ### 3.3 B 线（浏览器）容器图 `C4-02`
 
@@ -165,7 +176,7 @@ flowchart TB
     DESK -. "F3 抓系统声音" .-> UI
 ```
 
-**与 `C4-01` 的差**：B 线在 12 个组件里只用到 3 个。
+**与 `C4-01` 的差**：B 线在 14 个组件里只用到 3 个。
 
 | 维度 | A 线 `C4-01` | B 线 `C4-02` |
 | --- | --- | --- |
@@ -365,7 +376,63 @@ sequenceDiagram
 **硬性上限**（`ADR-0004`）：步数 ≤ 8、总时长 ≤ 60 s；任一上限触发即中止，并播报"已经做了 N 步，还差什么"，
 不静默失败。危险操作**不因"写在计划里"而免确认**——确认点仍在 `CMP-04` 执行前（同 `FLOW-01` 规则）。
 
-### 4.7 SM-01 会话状态机（半双工）
+### 4.7 FLOW-07 图像取字（OCR · 第二个入口）
+
+三个来源（屏幕框选 / 摄像头 / 图片）都归一到 `IF-09`，产出带置信度的 `TextBlock[]`，
+之后与 ASR 文本走同一条下游——**不为 OCR 单独造一条链路**。
+
+```mermaid
+%% diagram: FLOW-07 图像取字 | updated: 2026-11-12
+sequenceDiagram
+    autonumber
+    actor U as 用户
+    participant UI as 对话界面
+    participant OC as CMP-13 OCR 引擎
+    participant CE as CMP-03 认知引擎
+    participant LLM as CMP-10 推理
+
+    U->>UI: 框选屏幕 / 对准摄像头 / 选图片
+    UI->>OC: Recognize(image, source)
+    OC->>OC: 预处理（放大 · 去噪 · 方向校正）
+    OC-->>UI: TextBlock[]（文本 + 置信度 + 版面坐标）
+    opt 有低置信度块（< 阈值）
+        UI->>U: 标黄，允许改完再提交
+    end
+    U->>UI: 补一句"这是什么意思"
+    UI->>CE: Understand(context, ocr_text + 问题)
+    CE->>LLM: Chat(...)
+    LLM-->>CE: 回答
+```
+
+**硬性约束**：低置信度块必须带标记（`F-096`）；识别结果不回写原文，只作上下文。
+
+### 4.8 FLOW-08 播报与形象同步（第三/第二输出口并行）
+
+TTS 与形象**同时消费**同一份回答：TTS 出声音，形象出口型。二者是并列消费者，
+**形象掉帧不许回头影响播报**——所以 `IF-10` 是异步投递。
+
+```mermaid
+%% diagram: FLOW-08 播报与形象 | updated: 2026-11-12
+sequenceDiagram
+    autonumber
+    participant CE as CMP-03 认知引擎
+    participant TTS as CMP-07 播报器
+    participant AV as CMP-14 形象驱动
+    actor U as 用户
+
+    CE->>TTS: Speak(text_stream)
+    CE->>AV: DriveAvatar({emotion, text})
+    loop 每个音频块
+        TTS-->>AV: 音频块 + 时间戳
+        AV->>AV: 计算 viseme
+        AV-->>U: 口型 + 表情
+    end
+    U->>CE: 热键打断
+    CE->>TTS: flush()
+    CE->>AV: DriveAvatar(idle)
+```
+
+### 4.9 SM-01 会话状态机（半双工）
 
 ```mermaid
 %% diagram: SM-01 状态机 | updated: 2026-10-26
@@ -392,7 +459,7 @@ stateDiagram-v2
 
 > 注意：**没有** `Speaking → Listening` 的"语音打断"路径，那是全双工；半双工下打断只由热键触发。
 
-### 4.8 DM-01 领域类图
+### 4.10 DM-01 领域类图
 
 ```mermaid
 %% diagram: DM-01 领域模型 | updated: 2026-10-26

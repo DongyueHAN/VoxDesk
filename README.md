@@ -5,7 +5,7 @@
 
 | 项 | 值 |
 | --- | --- |
-| 版本 | **v1.6.0**（2026-11-11 优先级反转：`README`/`AGENTS` 在上、`00-spec` 在下；v1.5.0 = 减重） |
+| 版本 | **v1.7.0**（2026-11-11 `06`/`07`/`04` 串成「事实 → 机制 → 决策」选型链；v1.6.0 = 优先级反转） |
 | 当前阶段 | **双线**（2026-11-11 批准）：A 线 M2 收尾（S4 ✅ / S5 起步）；B 线 w0.6 已验收，下一个是 w0.7 |
 | 代码仓 | `D:\VoxDesk`（`master` 主线 · `demo/deepseek-voice` 演示） |
 | 权威源 | 本仓 `docs/`；聊天记录与口头结论不算数 |
@@ -96,10 +96,10 @@
 | [`docs/01-scope.md`](docs/01-scope.md) | 范围、场景、非目标、成功标准 |
 | [`docs/02-requirements.md`](docs/02-requirements.md) | 需求池 67 条（`REQ-*`）+ Intent/Requirements 讨论 |
 | [`docs/03-architecture.md`](docs/03-architecture.md) | **权威架构**：C4、6 条流程（`FLOW-01`~`06`）、半双工状态机、领域类图 |
-| [`docs/04-tech-stack.md`](docs/04-tech-stack.md) | 技术栈与选型理由（含端侧四项） |
+| [`docs/04-tech-stack.md`](docs/04-tech-stack.md) | **选型链 3/3 · 决策**：现版本选谁、参数、一句理由 |
 | [`docs/05-roadmap.md`](docs/05-roadmap.md) | 里程碑拆解 M0–M7 |
-| [`docs/06-oss-and-products.md`](docs/06-oss-and-products.md) | **开源项目与实际产品**：13 个环节的清单 + 成品对照 + 缺口 |
-| [`docs/07-model-layer.md`](docs/07-model-layer.md) | 模型层：选型、运行时、内存预算、工具调用可靠性 |
+| [`docs/06-oss-and-products.md`](docs/06-oss-and-products.md) | **选型链 1/3 · 事实**：13 环节清单 + 七个角度的取舍 |
+| [`docs/07-model-layer.md`](docs/07-model-layer.md) | **选型链 2/3 · 机制**：模型怎么跑（量化、运行时、显存、工具可靠性） |
 | [`docs/08-M2process.md`](docs/08-M2process.md) | **A 线冲刺**：M2 的 S4–S7、闸门、时延/显存预算 |
 | [`docs/09-web-implementation.md`](docs/09-web-implementation.md) | **当前实现验收**：VoxDesk-Web w0.6 的接口、能力、偏差 | 
 | [`docs/10-code-reading.md`](docs/10-code-reading.md) | **读/写代码方法**：Intent → Specification → Implement |
@@ -120,6 +120,11 @@
 **人了解（约 30 分钟）**
 
 本文 → `docs/01-scope.md` → `docs/05-roadmap.md` → `docs/03-architecture.md`（只看图）→ 代码仓 `README.md`。
+
+**选型链（想搞清"为什么选这个"时按顺序读）**
+
+`docs/06-oss-and-products.md`（外面有什么、代价）→ `docs/07-model-layer.md`（模型怎么跑）→ `docs/04-tech-stack.md`（我们选了谁）。
+**顺序不能跳**：先看决定再看取舍，会看不出"为什么不是另一个"。
 
 ## 6. 变更与版本
 

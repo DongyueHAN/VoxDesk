@@ -35,10 +35,10 @@
 | 改历史时间戳、改已发布 CHANGELOG 条目 | 时间是证据 |
 | 删除或重排任何 ID（`REQ-` / `CMP-` / `IF-` / `ADR-` / `CHG-`） | ID 永不复用 |
 | 直接改写状态为 `生效` 的 ADR 结论 | 要推翻 → 新开 ADR（`00-spec.md` §11） |
-| 动未跟踪的个人笔记 | `想法and调研and开会/`、`README-team.md` 属作者私有 |
+| 动未跟踪的个人笔记 | `灵感与开会/`、`调研/`（均被 `.gitignore` 排除）属作者私有 |
 | `git add -A` / `git add .` | 会误收上述笔记与研究资料 |
 | 贴截图、用 PlantUML/draw.io | 图必须 Mermaid、可 diff（`00-spec.md` §2） |
-| 把 `HumDial-Challenge-调研/`、`小爱同学-调研/` 的 PDF 搬进本仓库 | 体积与隐私；已被 `.gitignore` 排除 |
+| 把 `调研/` 下的 PDF / HTML 搬进本仓库 | 体积与隐私；已被 `.gitignore` 排除 |
 | 在本仓写"代码怎么实现" | 那是代码仓 `docs/ARCHITECTURE.md` 的职责 |
 
 ## 5. 环境
@@ -52,7 +52,7 @@
 | 指针 | 位置 |
 | --- | --- |
 | 当前阶段与冲刺 | `README.md` §3 进度 + `docs/08-M2process.md` |
-| 未决项 | `CHANGELOG.md` 最新条目里的"仍需你决定" |
+| 未决项 | `CHANGELOG.md` 最新条目的 `### 未决事项`（grep **`未决`** 可覆盖旧标题的三种写法） |
 | 外部边界 | `docs/adr/ADR-0010-two-repo-boundary.md`（两仓独立，只保留概念层接缝） |
 
 ## 7. 写作口径

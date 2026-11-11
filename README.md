@@ -5,7 +5,7 @@
 
 | 项 | 值 |
 | --- | --- |
-| 版本 | **v1.3.0**（2026-11-11 对齐现实：引用修复 · 双线转正 · 需求状态 · 规范冻结 v1.0.0） |
+| 版本 | **v1.4.0**（2026-11-11 `06` 重写为「开源项目与实际产品」+ Neuro 清单并入；v1.3.x = 对齐现实） |
 | 当前阶段 | **双线**（2026-11-11 批准）：A 线 M2 收尾（S4 ✅ / S5 起步）；B 线 w0.6 已验收，下一个是 w0.7 |
 | 代码仓 | `D:\VoxDesk`（`master` 主线 · `demo/deepseek-voice` 演示） |
 | 权威源 | 本仓 `docs/`；聊天记录与口头结论不算数 |
@@ -64,7 +64,7 @@
 2. **半双工先行**：全双工与 AEC 列为 P3，不在当前范围（`ADR-0006`、`REQ-F-013`）。
 3. **自己编排、不自研模型**：价值在端侧工程与系统编排，不在训练（`01-scope.md`）。
 
-参考对象：小爱同学（功能形态与端侧工程）、OpenClaw（系统分层与生态集成），详见 `docs/06-reference-landscape.md`。
+参考对象：小爱同学（功能形态与端侧工程）、OpenClaw（系统分层与生态集成）；文献与开源件清单见 `docs/06-oss-and-products.md`。另有一份从长期意图来的素材：neuro-sama 式"智能生命"（`README` §1.1）。
 
 ## 3. 进度
 
@@ -96,7 +96,7 @@
 | [`docs/03-architecture.md`](docs/03-architecture.md) | **权威架构**：C4、6 条流程（`FLOW-01`~`06`）、半双工状态机、领域类图 |
 | [`docs/04-tech-stack.md`](docs/04-tech-stack.md) | 技术栈与选型理由（含端侧四项） |
 | [`docs/05-roadmap.md`](docs/05-roadmap.md) | 里程碑拆解 M0–M7 |
-| [`docs/06-reference-landscape.md`](docs/06-reference-landscape.md) | 小爱 / OpenClaw / 竞品对照 |
+| [`docs/06-oss-and-products.md`](docs/06-oss-and-products.md) | **开源项目与实际产品**：13 个环节的清单 + 成品对照 + 缺口 |
 | [`docs/07-model-layer.md`](docs/07-model-layer.md) | 模型层：选型、运行时、内存预算、工具调用可靠性 |
 | [`docs/08-M2process.md`](docs/08-M2process.md) | **A 线冲刺**：M2 的 S4–S7、闸门、时延/显存预算 |
 | [`docs/09-web-implementation.md`](docs/09-web-implementation.md) | **当前实现验收**：VoxDesk-Web w0.6 的接口、能力、偏差 | 

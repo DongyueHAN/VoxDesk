@@ -14,7 +14,7 @@
 
 | 文件 | 为什么还留着 |
 | --- | --- |
-| [`../06-reference-landscape.md`](../06-reference-landscape.md) | 竞品对照（小爱 / OpenClaw），解释"为什么是这个形态"，体积小、不常变 |
+| [`../06-oss-and-products.md`](../06-oss-and-products.md) | 开源件与成品清单，解释"外面有什么"；体积小、不常变（2026-11-11 由 `06-reference-landscape.md` 重写而来） |
 
 ## 规则
 

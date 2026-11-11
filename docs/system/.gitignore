@@ -1,0 +1,35 @@
+# ---- 研究资料：按 00-spec 第 3 节，暂不纳入工程仓库 ----
+调研/
+HumDial-Challenge-调研/
+小爱同学-调研/
+/*.html
+灵感与开会/
+
+
+# ---- Obsidian ----
+.obsidian/
+.trash/
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+
+# ---- 运行时产物 ----
+*.db
+*.sqlite3
+logs/
+recordings/
+.env
+.env.*
+
+# ---- 编辑器 / 系统 ----
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+~$*

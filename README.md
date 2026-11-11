@@ -5,7 +5,7 @@
 
 | 项 | 值 |
 | --- | --- |
-| 版本 | **v2.0.0**（2026-11-12 方向性调整：两入口 · 一脑子 · 三出口；v1.9.x = 决策册 / 分组） |
+| 版本 | **v2.1.0**（2026-11-12 `08` 改造为进度看板 · `07` 补 M8–M10 · 组 C/D 重划；v2.0.0 = 方向性调整） |
 | 当前阶段 | **双线**（2026-11-11 批准）：A 线 M2 收尾（S4 ✅ / S5 起步）；B 线 w0.6 已验收，下一个是 w0.7 |
 | 代码仓 | `D:\VoxDesk`（`master` 主线 · `demo/deepseek-voice` 演示） |
 | 权威源 | 本仓 `docs/`；聊天记录与口头结论不算数 |
@@ -107,7 +107,7 @@
 | --- | --- |
 | [`docs/00-spec.md`](docs/00-spec.md) | 文档规范：版本、时间戳、编号、图规范、ADR 生命周期 |
 | [`docs/01-scope.md`](docs/01-scope.md) | 范围、场景、非目标、成功标准 |
-| [`docs/02-requirements.md`](docs/02-requirements.md) | 需求池 67 条（`REQ-*`）+ 与 Intent 的口径 |
+| [`docs/02-requirements.md`](docs/02-requirements.md) | 需求池 **93 条**（`REQ-*`）+ 与 Intent 的口径 |
 | [`docs/03-architecture.md`](docs/03-architecture.md) | **权威架构**：C4、6 条流程（`FLOW-01`~`06`）、半双工状态机、领域类图 |
 
 ### 组 B · 选型链（外面有什么 → 怎么跑 → 选谁）
@@ -118,21 +118,21 @@
 | [`docs/05-model-layer.md`](docs/05-model-layer.md) | **2/3 · 机制**：模型怎么跑（量化、运行时、显存、工具可靠性） |
 | [`docs/06-tech-stack.md`](docs/06-tech-stack.md) | **3/3 · 决策**：现版本选谁、参数、一句理由 |
 
-### 组 C · 治理（还悬着什么、怎么分工）
+### 组 C · 治理（怎么干活——**不随版本过期**）
 
 | 文件 | 回答什么问题 |
 | --- | --- |
+| [`docs/10-code-reading.md`](docs/10-code-reading.md) | **读/写代码方法**：Intent → Specification → Implement |
 | [`docs/11-decisions.md`](docs/11-decisions.md) | **决策登记册**：哪些还悬着（`DEC-0xx`）、哪些已定（`DEC-1xx`） |
 | [`docs/12-team-and-workpackages.md`](docs/12-team-and-workpackages.md) | **分工与协作**：6 个工作包、接口契约、mock 与门禁 |
 
-### 组 D · 实践（按什么顺序推进——**会过期**）
+### 组 D · 实践（干到哪了——**会过期**）
 
 | 文件 | 回答什么问题 | 时效 |
 | --- | --- | --- |
-| [`docs/07-roadmap.md`](docs/07-roadmap.md) | 里程碑拆解 M0–M7 | 状态列随冲刺回写 |
-| [`docs/08-M2process.md`](docs/08-M2process.md) | **A 线冲刺**：M2 的 S4–S7、闸门、时延/显存预算 | 期次记录，闸门数值冻结 |
+| [`docs/07-roadmap.md`](docs/07-roadmap.md) | **长线**：里程碑 M0–M10 | 状态列随进度回写 |
+| [`docs/08-M2process.md`](docs/08-M2process.md) | **短期目标与进度看板**：六个 WP 各自到哪了 + 集成门禁 | 每周更新，会过期 |
 | [`docs/09-web-implementation.md`](docs/09-web-implementation.md) | **一次验收快照**：VoxDesk-Web w0.6 的能力与偏差 | 快照，现状以代码仓为准 |
-| [`docs/10-code-reading.md`](docs/10-code-reading.md) | **读/写代码方法**：Intent → Specification → Implement | 方法不随版本过期 |
 
 ### 其他
 

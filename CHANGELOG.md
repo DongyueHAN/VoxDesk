@@ -5,6 +5,34 @@
 
 ---
 
+## [v1.2.1] · 2026-11-11 21:52 +08:00 · 修复 archive 内失效链接
+
+**类型**：修复（PATCH）
+**范围**：`docs/archive/11-peer-repo-crosscheck.md`、`docs/archive/12-M1process.md`、`README.md`
+**触发**：vault 目录 `Geist\Project` → `Geist\Projects` 重命名后做了一次全仓链接扫描
+
+### 变更
+
+| ID | 变更 | 文件 |
+| --- | --- | --- |
+| CHG-0133 | 15 条相对链接改基：`archive/11` 内原按 `docs/` 写（`01-scope.md` ×3、`02-requirements.md` ×4、`04-tech-stack.md` ×4、`03-architecture.md` ×1、`00-spec.md` ×1、`adr/ADR-0010-…` ×1），文件实际在 `docs/archive/`，一律补 `../` 前缀 | `docs/archive/11-peer-repo-crosscheck.md` |
+| CHG-0134 | 1 条指向私有笔记的链接（`../想法and调研and开会/…`，该目录已更名、文件也不在仓内）改为纯文本并标注"作者私有笔记，不在本仓"，不留死链 | `docs/archive/11-peer-repo-crosscheck.md` |
+| CHG-0135 | `archive/12` 指向 M2 进程文档的链接 `13-M2process.md` → `../08-M2process.md`（该文重编号为 08），正文"13 不再重复定义"同步为 `08` | `docs/archive/12-M1process.md` |
+
+### 说明：vault 重命名造成的链接改写
+
+`Geist\Project` → `Geist\Projects` 之后，Obsidian（`newLinkFormat: "absolute"` + `alwaysUpdateLinks: true`）
+把 48 条仓内相对链接改写成 vault 绝对路径 `Projects/full-deplux%20dialogue%20system/docs/…`。
+这种写法只在 Obsidian 里成立，在 VS Code / Typora / GitHub / 任何别的机器上全部 404，
+与"交接可用"冲突，**已全部还原为仓内相对路径**；只保留上表 3 项真实修复。
+
+### 校验
+
+全仓 `*.md` 内部相对链接 **50 条，失效 0 条**；
+剩余 2 条 vault 绝对路径位于 `调研/00_调研计划.md`（`.gitignore` 排除的作者私有笔记），未触碰。
+
+---
+
 ## [v1.2.0] · 2026-11-10 22:05 +08:00 · 龙骨落档 + 选型决策 + B 线需求
 
 **类型**：新增 + 修订（MINOR）

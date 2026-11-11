@@ -3,10 +3,10 @@
 | 字段 | 值 |
 | --- | --- |
 | 文档 | `docs/03-architecture.md` |
-| 版本 | v0.3.0 |
+| 版本 | v0.4.0 |
 | 状态 | 草案 |
-| 更新 | 2026-11-11 22:05 +08:00 |
-| 生效范围 | 组件划分、交互流程、状态、领域模型 |
+| 更新 | 2026-11-11 22:12 +08:00 |
+| 生效范围 | 组件划分、交互流程、状态、领域模型；**A 线用 `C4-01`，B 线用 `C4-02`（§3.3）** |
 
 > **本版变化**：逻辑分层由"9 个平铺组件"改为 **5 层 + 2 个跨层基础件**；语音链路由"云"改为"本机"；会话模型由"全双工"改为"半双工 + 通道仲裁"。
 
@@ -128,6 +128,52 @@ flowchart TB
 | **IF-06** | **`Delegate(task, workdir) -> event_stream`** | **CMP-11** | **摘要级事件，非逐字** |
 | **IF-07** | **`Search(query, k) -> Chunk[]`** | **CMP-12** | **带来源路径与行号** |
 | **IF-08** | **`Chat(messages, tools) -> token_stream`** | **CMP-10** | **OpenAI 兼容** |
+
+### 3.3 B 线（浏览器）容器图 `C4-02`
+
+A 线是"桌面进程 + 推理进程"，B 线是"浏览器 UI + 本机 HTTP 服务 + 云端推理"——**不是同一套容器**，
+所以单开一张图，而不是往 `C4-01` 里塞分支。两线共用组件编号，但只共用真正跑到的那几个。
+
+```mermaid
+%% diagram: C4-02 B 线容器图 | updated: 2026-11-11
+flowchart TB
+    subgraph BROW["浏览器（本机）"]
+        UI["static/app.js<br/>WebAudio 16k PCM16 · F2 按住说话 · F3 桌面音频"]
+        VW["/voice 声纹页<br/>Canvas 可视化"]
+    end
+    subgraph SRV["server.py（stdlib ThreadingHTTPServer · 127.0.0.1）"]
+        API["HTTP API<br/>/api/asr · /api/chat · /api/chats<br/>/api/wav · /api/timbre"]
+        APP["voice_app.py<br/>编排：transcribe → chat → synth"]
+        ST[("store.py<br/>JSON 会话 30 活跃 / 100 归档")]
+    end
+    subgraph LOC["本机进程内模型"]
+        ASR["CMP-01 语音前端 · ASR<br/>sherpa-onnx + Paraformer"]
+        TTS["CMP-07 播报器<br/>Piper zh_CN-huayan-medium"]
+    end
+    CLOUD[["DeepSeek API<br/>deepseek-flash + web_search / web_fetch"]]
+    DESK[["桌面音频回环<br/>WASAPI loopback"]]
+
+    UI -- "POST PCM16" --> API
+    VW -- "GET 页面" --> API
+    API --> APP
+    APP --> ASR
+    APP --> TTS
+    APP --> ST
+    APP <-->|"HTTPS"| CLOUD
+    DESK -. "F3 抓系统声音" .-> UI
+```
+
+**与 `C4-01` 的差**：B 线在 12 个组件里只用到 3 个。
+
+| 维度 | A 线 `C4-01` | B 线 `C4-02` |
+| --- | --- | --- |
+| 进程边界 | 桌面进程 + 推理进程 | 浏览器 + 本机 HTTP 服务 |
+| 推理位置 | 全部本地（`CMP-10` Ollama） | **云端 DeepSeek**（`CMP-10` 缺席） |
+| 已落地 | 目标态 | `CMP-01`（仅 ASR 段）、`CMP-07`、`CMP-09`（简化版） |
+| 未落地 | — | `CMP-02`~`06`、`CMP-08`、`CMP-11`、`CMP-12`（逐项见 `09` §5） |
+
+> 这张图不改变 `ADR-0005`：B 线的云端推理是过渡态，`CMP-10` 接上后即回填到 `C4-01` 的形态。
+> 两线并行是 2026-11-11 批准的基线（`05` §1.2）。
 
 ## 4. 核心流程
 

@@ -159,3 +159,22 @@ data/archive/<uuid>.json   归档（≤100）
 
 原框架有自己的文档、验收和节奏；本仓库继续做快速验证。有效的约定（16k PCM、
 ASR 尾静音、TTS 引擎锁、提示词/工具结构）后续可回填原框架，但不在这里修改它。
+
+## 代码 ↔ 规范映射（2026-11-12 起）
+
+实现区的每一块都对应规范区的一个组件与接口，改代码前先确认改的是哪个 `CMP`：
+
+| 代码 | 组件 | 接口 | WP | 规范位置 |
+| --- | --- | --- | --- | --- |
+| `audio/`（`StreamingASR`、VAD、降噪） | `CMP-01` 语音前端 | `IF-01` | WP1 | `docs/system/docs/03-architecture.md` §3.1 |
+| `ocr.py` | **`CMP-13` OCR 引擎** | **`IF-09`** | WP2 | 同上；**仅契约，未接引擎** |
+| `voice_app.py` | `CMP-03` 认知引擎（编排） | `IF-02` | WP3 | 同上 |
+| `llm.py` / `search.py` | `CMP-10` 推理 + 工具 | `IF-08` | WP3 | 同上 |
+| `store.py` | `CMP-09` 存储 | — | WP3 | 同上 |
+| `tts/` + `synth_wav()` | `CMP-07` 播报器 | `IF-05` | WP4 | 同上 |
+| `avatar.py` | **`CMP-14` 形象驱动** | **`IF-10`** | WP5 | 同上；**仅 Null 实现** |
+| `server.py` | `CMP-02` 会话网关（B 线简化版） | — | — | `docs/system/docs/03-architecture.md` §3.3 `C4-02` |
+| `static/app.js` | 浏览器界面 | — | — | 同上 |
+
+两个"只有契约"的模块（`ocr.py`、`avatar.py`）是**故意留的接缝**：接口形状先按 `IF-09`/`IF-10` 定下来，
+引擎和渲染器后接，调用方不用改。`/api/ocr` 返回 501，`/api/avatar` 返回契约，都是在说"这里还没实现"。

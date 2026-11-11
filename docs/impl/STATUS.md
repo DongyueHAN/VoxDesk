@@ -4,10 +4,10 @@
 > | WP | 模块 | 现状 |
 > | --- | --- | --- |
 > | WP1 听 | ASR | ✅ 可用（`§1` 第 5 项；CER 24.3% 未达标） |
-> | WP2 看 | OCR | ⬜ 未开始 |
+> | WP2 看 | OCR | ⬜ 未开始（`ocr.py` 契约已落，`/api/ocr` 返回 501） |
 > | WP3 脑 | LLM + 知识库 | 🟡 云端 DeepSeek 可用；**知识库未做** |
 > | WP4 说 | TTS + 音色 | 🟡 Piper 可用；音色库未做 |
-> | WP5 演 | 形象 | ⬜ 未开始 |
+> | WP5 演 | 形象 | ⬜ 未开始（`avatar.py` 为 `NullAvatar`，`/api/avatar` 可查契约） |
 > | WP6 做 | 工具 / agent | 🟡 仅 `web_search` / `web_fetch` |
 >
 > 下面的按功能列表是 w0.6 的原始记录，仍然有效。

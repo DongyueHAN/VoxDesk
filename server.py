@@ -63,6 +63,10 @@ class Handler(BaseHTTPRequestHandler):
             self._file(STATIC / "app.html", "text/html; charset=utf-8")
         elif path in ("/voice", "/voice.html"):
             self._file(STATIC / "voice.html", "text/html; charset=utf-8")
+        elif path == "/api/avatar":
+            import avatar as _avatar
+            self._json(_avatar.contract())
+            return
         elif path == "/api/health":
             self._json(app().status())
         elif path == "/api/chats":
@@ -113,6 +117,10 @@ class Handler(BaseHTTPRequestHandler):
                 return
             if path == "/api/chat":
                 self._chat_post()
+                return
+            if path == "/api/ocr":
+                import ocr as _ocr
+                self._json({"error": "not_implemented", **_ocr.contract()}, 501)
                 return
             if path == "/api/timbre":
                 self._timbre_post()

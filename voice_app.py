@@ -9,6 +9,7 @@ import uuid
 
 import numpy as np
 
+import avatar  # IF-10 形象驱动（旁路）
 import paths
 
 paths.install_sys_path()
@@ -191,6 +192,10 @@ class VoiceApp:
             except Exception:  # noqa: BLE001 - 表情分类失败不影响主链路
                 emotion = "neutral"
             emotion_ms = (time.perf_counter() - t_emotion) * 1000
+
+        # IF-10：把这一轮的回答交给形象（当前是 NullAvatar，什么都不做）。
+        # 形象是旁路，抛异常也不许影响播报；渲染器路线见 DEC-003。
+        avatar.emit(agent.text, emotion)
 
         stamp = time.strftime("%Y-%m-%dT%H:%M:%S%z")
         user_msg = {

@@ -41,6 +41,7 @@
 | TTS | Piper `zh_CN-huayan-medium`（本地 ONNX） |
 | 技术栈 | Python 标准库 `http.server` + 原生 HTML/CSS/JS |
 | 页面 | `/` 语音对话 · `/voice` 声纹可视化 |
+| 契约占位 | `POST /api/ocr` → 501（`IF-09` 未接引擎）· `GET /api/avatar` → `IF-10` 契约（`NullAvatar`） |
 | 会话存储 | 本机 JSON：`data/chats`、`data/archive` |
 | 存储上限 | 30 活跃 / 100 归档 / 单会话 1MB |
 | 运行环境 | Windows 10/11；Chrome / Edge；Python 3.11 |

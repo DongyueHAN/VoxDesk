@@ -55,7 +55,10 @@ web/w0.6（默认/集成分支）
 ```powershell
 # Python 语法
 & 'D:\VoxDesk\demo\.venv\Scripts\python.exe' -m py_compile `
-  server.py voice_app.py llm.py search.py store.py prompts.py paths.py
+  server.py voice_app.py llm.py search.py store.py prompts.py paths.py kb.py
+
+# 单测（知识库等）
+& 'D:\VoxDesk\demo\.venv\Scripts\python.exe' -m unittest discover -s tests
 
 # 前端语法
 node --check static\app.js
@@ -80,6 +83,7 @@ Invoke-RestMethod http://127.0.0.1:8800/api/chat -Method Post `
 | 层 | 当前手段 | 正常开发应补 |
 | --- | --- | --- |
 | 存储 | 临时目录测 30/100/1MB | pytest：上限、归档 FIFO、原子写、损坏 JSON |
+| 知识库 | `tests/test_kb.py`（27 项，stdlib unittest） | 召回查询集 `Recall@5`、1 万篇建索引计时 |
 | LLM | 真实 API 手测 | mock `DeepSeekChat`；工具循环/超时/空回复 |
 | ASR | 固定 wav 手测 | CER 集、静音/短音频/长音频 |
 | TTS | 合成一次听 | 文本切分、特殊字符、失败回退 |

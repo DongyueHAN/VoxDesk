@@ -56,6 +56,7 @@ VoxDesk-Web/
 ├─ store.py        data/chats、data/archive、上限/归档
 ├─ prompts.py      DSH 风格 system prompt + web_search/web_fetch schema
 ├─ paths.py        本地模型/数据路径
+├─ kb.py           知识库索引/检索内核（IF-07）
 ├─ loopback.py     WASAPI loopback（桌面音频备选）
 ├─ audio/ tts/     合并后的源码与模型（模型 gitignore）
 ├─ static/app.html/css/js  通用/陪伴前端（无构建）
@@ -121,6 +122,26 @@ data/archive/<uuid>.json   归档（≤100）
 振幅 → 线宽/亮度，音色 → HSL），离屏残影层按 `dt` 衰减；规则存 localStorage。
 详见 `STATUS.md`。
 
+### 3.7 知识库（`CMP-12` · `IF-07`，仅内核）
+
+```text
+语料根（VOXDESK_KB_DIR，缺省本仓 docs/）
+  → iter_documents   只收 .md/.txt；跳过 .obsidian/.trash/隐藏目录/超 2MB/越界链接
+  → chunk_text       按空行切段并合并到 480 字，记录 [start_line, end_line]
+  → data/kb/index.json  {version, root, built_at, docs:[{path, mtime, size, sha1, chunks}]}
+  → search(query, k) BM25(k1=1.2, b=0.75) + 覆盖率门槛
+  → Chunk{path, start_line, end_line, score, snippet}   ← 行号可直接引用
+```
+
+- **增量**：`mtime+size` 未变直接复用；变了比 `sha1`；真变了才重新切块。索引整体重写
+  （`tmp + os.replace`），所以单篇改动也要重写整份索引。
+- **分词**：拉丁词 + 中文双字；不引入分词库或分词模型（`DECISIONS.md` ADR-0009）。
+- **拒绝误命中**：命中词数 < `max(1, ceil(0.4 × 查询词数))` 的片段直接丢弃；
+  检索不到返回空列表，由上层说"没记过"（`REQ-F-089`）。
+- **查询缓存**：`_ROWS_CACHE` 按索引文件 `mtime` 失效，缓存预分词片段
+  （1 万篇重复查询从约 600ms 降到约 70ms）。
+- **尚未暴露**：没有 `/api/kb/*`，也没有 `kb_search` 工具——P2/P3 接入。
+
 ## 4. 接口契约
 
 **唯一权威：[`API.md`](API.md)**——15 个 `/api/*` 端点的方法、请求/响应字段、状态码矩阵与数据模型都在那里。
@@ -144,6 +165,8 @@ data/archive/<uuid>.json   归档（≤100）
 - `StreamingASR` 用 `_asr_lock` 串行化（保守处理）；
 - `ConversationStore` 用 `RLock` 保护目录/元数据；文件原子替换；
 - LLM/Search 每请求独立，无共享状态；Search 结果有 5 分钟内存缓存；
+- 知识库构建/检索都在调用线程内完成；`_ROWS_CACHE` 是按索引 `mtime` 失效的只读缓存，
+  没有跨线程写状态；
 - `/api/wav` 仅保留最近 20 个。
 
 ## 6. 为什么保留“独立仓库”
@@ -161,6 +184,7 @@ ASR 尾静音、TTS 引擎锁、提示词/工具结构）后续可回填原框�
 | `ocr.py` | **`CMP-13` OCR 引擎** | **`IF-09`** | WP2 | 同上；**仅契约，未接引擎** |
 | `voice_app.py` | `CMP-03` 认知引擎（编排） | `IF-02` | WP3 | 同上 |
 | `llm.py` / `search.py` | `CMP-10` 推理 + 工具 | `IF-08` | WP3 | 同上 |
+| `kb.py` | **`CMP-12` 知识接入** | **`IF-07`** | WP3 | 同上；**仅内核，无 HTTP/对话** |
 | `store.py` | `CMP-09` 存储 | — | WP3 | 同上 |
 | `tts/` + `synth_wav()` | `CMP-07` 播报器 | `IF-05` | WP4 | 同上 |
 | `avatar.py` | **`CMP-14` 形象驱动** | **`IF-10`** | WP5 | 同上；**仅 Null 实现** |

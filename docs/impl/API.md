@@ -309,7 +309,7 @@ TimbreResult {
 | `IF-08 Chat` | 进程内 `llm.py`，**不对外暴露** | 已实现（非流式） |
 | `IF-09 Recognize` | `POST /api/ocr` | 契约占位（501） |
 | `IF-10 DriveAvatar` | `GET /api/avatar` 查契约；驱动走进程内 `emit()` | 契约占位（`NullAvatar`） |
-| `IF-07 Search`（`CMP-12` 知识接入） | **未实现**；规划落点 `POST /api/kb/search` | 待 KB 分支 |
+| `IF-07 Search`（`CMP-12` 知识接入） | **未暴露**；内核已落（`kb.py`，CLI 可跑），规划落点 `POST /api/kb/search` | 内核完成 / HTTP 待 P2 |
 
 ## 7. 变更规则
 

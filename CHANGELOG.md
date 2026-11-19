@@ -27,13 +27,21 @@
 
 ### Added
 
+- **`docs/impl/API.md`**：HTTP 接口契约手册——15 个 `/api/*` 端点的请求/响应字段、状态码矩阵、数据模型、`IF-01~10` 到 HTTP 的映射，成为接口的**唯一权威**
 - 正常开发文档：`docs/impl/DEVELOPING.md`、`docs/impl/SECURITY.md`、`docs/impl/DECISIONS.md`、`docs/impl/GLOSSARY.md`
 - README 文档阅读顺序与 Agent 开工规则
 
 ### Changed
 
+- `ARCHITECTURE.md` §4 删除重复的接口表（已过期：缺 `/api/ocr`、`/api/avatar`，并写了不存在的 `timings` 字段），改为指向 `API.md` 并只保留跨接口约定
+- `AGENTS.md` §2/§6、`README.md` 文档顺序、`DEVELOPING.md` §9 登记 `API.md`
 - 发布流程改为以本仓主仓库 + GitHub Desktop 为准
 - 明确 `web_fetch` SSRF、鉴权、CI、依赖锁定等待办
+
+### Known issues
+
+- `GET /static/*` 未校验路径是否越出 `static/` 目录，`..` 段可读到仓库内任意文件（已实测）；待独立 fix PR
+- `server.py` 的 `server_version` 仍为 `VoxDeskWeb/0.5`，与 `w0.7` 版本线不一致；待 chore PR
 
 ### Fixed
 

@@ -123,27 +123,18 @@ data/archive/<uuid>.json   归档（≤100）
 
 ## 4. 接口契约
 
-| 方法 | 路径 | 请求 | 响应 |
-| --- | --- | --- | --- |
-| GET | `/` | — | `static/app.html` |
-| GET | `/voice` | — | `static/voice.html` |
-| GET | `/app.css` `/app.js` | — | 静态资源 |
-| POST | `/api/asr` | 16k 单声道 int16 裸 PCM（≤2MB/30s） | `{text, asr_ms, first_char_ms, audio_s}` |
-| POST | `/api/chat` | `{conversation_id?, text, mode, speak, web, source?, asr_ms?}` | `{conversation_id, reply, sources, audio, timings, model, tool_rounds}` |
-| GET | `/api/chats` | `?archived=0/1` | `{items, stats, limits}` |
-| POST | `/api/chats` | `{mode}` | 新建空会话（201） |
-| GET | `/api/chats/<id>` | `?archived=1` 可选 | 完整会话 JSON |
-| PATCH | `/api/chats/<id>` | `{title}` | 更新后的会话 |
-| DELETE | `/api/chats/<id>` | — | `{removed, stats}` |
-| POST | `/api/chats/<id>/archive` | — | `{id, purged, stats}` |
-| POST | `/api/chats/<id>/restore` | — | `{id, stats}` |
-| GET | `/api/health` | — | 模型/ASR/TTS/key/存储状态 |
-| GET | `/api/wav/<name>` | — | `audio/wav` |
-| GET | `/api/timbre/<name>` | — | 音色 JSON |
-| POST | `/api/timbre` | 16k int16 PCM | 音色 JSON |
+**唯一权威：[`API.md`](API.md)**——15 个 `/api/*` 端点的方法、请求/响应字段、状态码矩阵与数据模型都在那里。
 
-错误：`{"error": "...", "type": "..."}` + 400/404/409/413/502/500。
-`/api/chat` 在 TTS 成功时额外带 `timbre`（给 `/voice` 兼容）。
+本节只保留**跨接口的约定**，不重复端点细节（重复就会漂移：旧表缺 `/api/ocr`、`/api/avatar`，
+还写了根本不存在的 `timings` 字段）：
+
+- **错误信封**：`{"error": "...", "type": "..."}`，`type` 可省略；
+- **响应头**：一律 `Cache-Control: no-store`；不设 CORS，同源访问；
+- **鉴权**：无，默认只绑 `127.0.0.1`；
+- **wav 注册表**：只保留最近 20 个，淘汰后 `/api/wav` 与 `/api/timbre` 变 404；
+- **两个契约占位**：`POST /api/ocr` → 501，`GET /api/avatar` → 契约 JSON。
+
+> 改 `/api/*` 时：先改 `API.md`，再改路由，同一提交；端点集合与 `server.py` 必须 1:1。
 
 ## 5. 线程模型
 

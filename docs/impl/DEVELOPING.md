@@ -139,7 +139,8 @@ Invoke-RestMethod http://127.0.0.1:8800/api/chat -Method Post `
 
 | 改动 | 必须更新 |
 | --- | --- |
-| API/数据流/线程 | `ARCHITECTURE.md` |
+| API 端点/字段/状态码 | `API.md`（唯一权威） |
+| 数据流/线程/存储 | `ARCHITECTURE.md` |
 | 能力/实测数字 | `STATUS.md` |
 | 新坑/绕过旧坑 | `PITFALLS.md` |
 | 计划/优先级 | `PLAN.md` |

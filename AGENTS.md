@@ -17,17 +17,18 @@
 | --- | --- | --- |
 | 0 | `docs/system/README.md` | **Intent、需求、架构**——先看它再动代码 |
 | 1 | `README.md` | 是什么、能做什么、怎么跑、文档顺序 |
-| 2 | `docs/impl/ARCHITECTURE.md` | 数据流、接口、存储、线程模型 |
-| 3 | `docs/impl/STATUS.md` | 当前能力、实测数字、缺口 |
-| 4 | `docs/impl/PITFALLS.md` | 46 个坑，别重踩 |
-| 5 | `docs/impl/PLAN.md` | P1 结果、P2/P3 优先级 |
-| 6 | `docs/impl/DEVELOPING.md` | 分支、测试、依赖、发布流程 |
-| 7 | `docs/impl/SECURITY.md` | 密钥、隐私、SSRF、许可 |
-| 8 | `docs/impl/DECISIONS.md` | 架构决策与取舍 |
-| 9 | `docs/impl/GLOSSARY.md` | 模型、运行时、英文缩写 |
-| 10 | `docs/impl/PUBLISH.md` | 发布/安装包流程 |
-| 11 | `docs/impl/HANDOFF.md` | 原框架历史，仅在追溯时读 |
-| 12 | `docs/system/docs/11-decisions.md` | 还悬着什么（`DEC-0xx`）；动架构前先查 |
+| 2 | `docs/impl/ARCHITECTURE.md` | 数据流、线程模型、存储 |
+| 3 | `docs/impl/API.md` | **接口契约权威**：15 个端点、字段、状态码 |
+| 4 | `docs/impl/STATUS.md` | 当前能力、实测数字、缺口 |
+| 5 | `docs/impl/PITFALLS.md` | 46 个坑，别重踩 |
+| 6 | `docs/impl/PLAN.md` | P1 结果、P2/P3 优先级 |
+| 7 | `docs/impl/DEVELOPING.md` | 分支、测试、依赖、发布流程 |
+| 8 | `docs/impl/SECURITY.md` | 密钥、隐私、SSRF、许可 |
+| 9 | `docs/impl/DECISIONS.md` | 架构决策与取舍 |
+| 10 | `docs/impl/GLOSSARY.md` | 模型、运行时、英文缩写 |
+| 11 | `docs/impl/PUBLISH.md` | 发布/安装包流程 |
+| 12 | `docs/impl/HANDOFF.md` | 原框架历史，仅在追溯时读 |
+| 13 | `docs/system/docs/11-decisions.md` | 还悬着什么（`DEC-0xx`）；动架构前先查 |
 
 ## 3. 硬约束
 
@@ -79,7 +80,8 @@ Invoke-WebRequest http://127.0.0.1:8800/ -UseBasicParsing | Select-Object Status
 
 | 改了 | 更新 |
 | --- | --- |
-| API `/api/*`、数据流、线程 | `docs/impl/ARCHITECTURE.md` |
+| API `/api/*` 端点、字段、状态码 | **`docs/impl/API.md`（唯一权威）** |
+| 数据流、线程、存储 | `docs/impl/ARCHITECTURE.md` |
 | 能力、实测数字 | `docs/impl/STATUS.md` |
 | 新坑/绕过旧坑 | `docs/impl/PITFALLS.md` |
 | 计划/优先级 | `docs/impl/PLAN.md` |

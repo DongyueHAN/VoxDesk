@@ -254,16 +254,17 @@ http://127.0.0.1:8800/api/health
 | 顺序 | 文档 | 解决什么 | 什么时候读 |
 | --- | --- | --- | --- |
 | 1 | [`README.md`](README.md) | 项目是什么、能做什么、怎么跑 | 每次开工前 |
-| 2 | [`docs/impl/ARCHITECTURE.md`](docs/impl/ARCHITECTURE.md) | 数据流、接口、存储、线程模型 | 改任何链路前 |
-| 3 | [`docs/impl/STATUS.md`](docs/impl/STATUS.md) | 当前能力、实测数字、已知缺口 | 判断“现在到底能做什么” |
-| 4 | [`docs/impl/PITFALLS.md`](docs/impl/PITFALLS.md) | 46 个坑与修正 | 改音频/模型/前端/存储前 |
-| 5 | [`docs/impl/PLAN.md`](docs/impl/PLAN.md) | P1 结果、P2/P3 优先级 | 排期和拆任务前 |
-| 6 | [`docs/impl/DEVELOPING.md`](docs/impl/DEVELOPING.md) | 正常开发流程：分支、测试、依赖、发布 | 写第一行代码前 |
-| 7 | [`docs/impl/SECURITY.md`](docs/impl/SECURITY.md) | 密钥、隐私、SSRF、数据、许可 | 动网络/文件/密钥前 |
-| 8 | [`docs/impl/DECISIONS.md`](docs/impl/DECISIONS.md) | 关键架构决策与取舍 | 想改架构/换模型前 |
-| 9 | [`docs/impl/GLOSSARY.md`](docs/impl/GLOSSARY.md) | 模型、运行时、英文缩写 | 读架构/写答辩/交接前 |
-| 10 | [`docs/impl/PUBLISH.md`](docs/impl/PUBLISH.md) | GitHub 分支、安装包、发布 | 发布/演示前 |
-| 11 | [`docs/impl/HANDOFF.md`](docs/impl/HANDOFF.md) | 原框架历史交接 | 只在追溯原框架时读，**不是当前 Web 规范** |
+| 2 | [`docs/impl/ARCHITECTURE.md`](docs/impl/ARCHITECTURE.md) | 数据流、存储、线程模型 | 改任何链路前 |
+| 3 | [`docs/impl/API.md`](docs/impl/API.md) | **接口契约权威**：15 个端点、字段、状态码 | 调接口/加端点前 |
+| 4 | [`docs/impl/STATUS.md`](docs/impl/STATUS.md) | 当前能力、实测数字、已知缺口 | 判断“现在到底能做什么” |
+| 5 | [`docs/impl/PITFALLS.md`](docs/impl/PITFALLS.md) | 46 个坑与修正 | 改音频/模型/前端/存储前 |
+| 6 | [`docs/impl/PLAN.md`](docs/impl/PLAN.md) | P1 结果、P2/P3 优先级 | 排期和拆任务前 |
+| 7 | [`docs/impl/DEVELOPING.md`](docs/impl/DEVELOPING.md) | 正常开发流程：分支、测试、依赖、发布 | 写第一行代码前 |
+| 8 | [`docs/impl/SECURITY.md`](docs/impl/SECURITY.md) | 密钥、隐私、SSRF、数据、许可 | 动网络/文件/密钥前 |
+| 9 | [`docs/impl/DECISIONS.md`](docs/impl/DECISIONS.md) | 关键架构决策与取舍 | 想改架构/换模型前 |
+| 10 | [`docs/impl/GLOSSARY.md`](docs/impl/GLOSSARY.md) | 模型、运行时、英文缩写 | 读架构/写答辩/交接前 |
+| 11 | [`docs/impl/PUBLISH.md`](docs/impl/PUBLISH.md) | GitHub 分支、安装包、发布 | 发布/演示前 |
+| 12 | [`docs/impl/HANDOFF.md`](docs/impl/HANDOFF.md) | 原框架历史交接 | 只在追溯原框架时读，**不是当前 Web 规范** |
 
 > 版本记录：[`CHANGELOG.md`](CHANGELOG.md)（代码版本线）。**文档区有自己的版本线**：[`docs/system/CHANGELOG.md`](docs/system/CHANGELOG.md)。发布前先看 `docs/impl/PUBLISH.md`。
 >

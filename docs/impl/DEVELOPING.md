@@ -84,6 +84,7 @@ Invoke-RestMethod http://127.0.0.1:8800/api/chat -Method Post `
 | --- | --- | --- |
 | 存储 | 临时目录测 30/100/1MB | pytest：上限、归档 FIFO、原子写、损坏 JSON |
 | 知识库 | `tests/test_kb.py`（27 项，stdlib unittest） | 召回查询集 `Recall@5`、1 万篇建索引计时 |
+| 长期记忆 | `tests/test_memory.py`（40 项，不接 LLM） | LLM 抽取质量、域过滤误判率 |
 | LLM | 真实 API 手测 | mock `DeepSeekChat`；工具循环/超时/空回复 |
 | ASR | 固定 wav 手测 | CER 集、静音/短音频/长音频 |
 | TTS | 合成一次听 | 文本切分、特殊字符、失败回退 |

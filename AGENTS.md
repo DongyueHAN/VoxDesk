@@ -60,7 +60,7 @@ cd D:\VoxDesk
 
 # 语法
 & 'D:\VoxDesk\demo\.venv\Scripts\python.exe' -m py_compile `
-  server.py voice_app.py llm.py search.py store.py prompts.py paths.py kb.py
+  server.py voice_app.py llm.py search.py store.py prompts.py paths.py kb.py memory.py
 
 # 单测
 & 'D:\VoxDesk\demo\.venv\Scripts\python.exe' -m unittest discover -s tests

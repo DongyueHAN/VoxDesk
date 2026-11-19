@@ -57,6 +57,7 @@ VoxDesk-Web/
 ├─ prompts.py      DSH 风格 system prompt + web_search/web_fetch schema
 ├─ paths.py        本地模型/数据路径
 ├─ kb.py           知识库索引/检索内核（IF-07）
+├─ memory.py       长期记忆：写入/检索/遗忘（ADR-0010）
 ├─ loopback.py     WASAPI loopback（桌面音频备选）
 ├─ audio/ tts/     合并后的源码与模型（模型 gitignore）
 ├─ static/app.html/css/js  通用/陪伴前端（无构建）
@@ -142,6 +143,31 @@ data/archive/<uuid>.json   归档（≤100）
   （1 万篇重复查询从约 600ms 降到约 70ms）。
 - **尚未暴露**：没有 `/api/kb/*`，也没有 `kb_search` 工具——P2/P3 接入。
 
+### 3.8 长期记忆（记忆层，仅内核）
+
+```text
+每轮回答后（P3 接）
+  → LLM 结构化抽取 → domain 过滤（只收日常）→ 去重合并 → data/memory/records.jsonl
+
+每轮生成前（P3 接）
+  → 常驻块：preference / fact 按衰减取前 8 条
+  → 检索块：解析时间窗（今天/昨天/上周/2026-11-18）→ 时间过滤 + 内容打分 → top-6
+  → format_for_prompt() 拼成两段注入 system prompt（每条带事件日期）
+
+decay()（定时或写入后）
+  → expires_at 到点 → expired
+  → 分数 < 0.15 → archived（不再注入）
+  → 归档/过期满 90 天 → 真删除
+  → 全程写 data/memory/audit.jsonl
+```
+
+- **`date` 是事件发生日**，`created_at` 是写入时间；两者混用会让"昨天"永远答错。
+- **语义记忆常驻**（偏好/事实），**情景记忆检索**（事件/日程/摘要）。
+- **时间窗兜底**：解析出时间窗但内容词不重叠时，返回该窗口记录并按衰减排序。
+- **遗忘**：`0.5^(龄期/半衰期)` × 重要度 × 命中强化；半衰期 日程 7 / 事件 30 / 事实 90 /
+  摘要 45 / 偏好 180 天（`DECISIONS.md` ADR-0010）。
+- **尚未接入**：没有 `/api/memory/*`，`voice_app.chat` 也还没注入记忆（P3）。
+
 ## 4. 接口契约
 
 **唯一权威：[`API.md`](API.md)**——15 个 `/api/*` 端点的方法、请求/响应字段、状态码矩阵与数据模型都在那里。
@@ -185,6 +211,7 @@ ASR 尾静音、TTS 引擎锁、提示词/工具结构）后续可回填原框�
 | `voice_app.py` | `CMP-03` 认知引擎（编排） | `IF-02` | WP3 | 同上 |
 | `llm.py` / `search.py` | `CMP-10` 推理 + 工具 | `IF-08` | WP3 | 同上 |
 | `kb.py` | **`CMP-12` 知识接入** | **`IF-07`** | WP3 | 同上；**仅内核，无 HTTP/对话** |
+| `memory.py` | **（无对应 `CMP`）长期记忆** | — | WP3 | `DECISIONS.md` ADR-0010；**规范区尚无 REQ，待补** |
 | `store.py` | `CMP-09` 存储 | — | WP3 | 同上 |
 | `tts/` + `synth_wav()` | `CMP-07` 播报器 | `IF-05` | WP4 | 同上 |
 | `avatar.py` | **`CMP-14` 形象驱动** | **`IF-10`** | WP5 | 同上；**仅 Null 实现** |

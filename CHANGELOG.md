@@ -30,13 +30,17 @@
 - **`kb.py`**：知识库索引/检索内核（`CMP-12` / `IF-07`）——增量建索引（`mtime+size+sha1`）、
   CJK 双字 + BM25、返回带 `path:起-止行` 的片段、覆盖率门槛挡住偶然命中（`REQ-F-089`）
 - **`tests/test_kb.py`**：27 项单测（stdlib `unittest`，零新依赖）
+- **`memory.py`**：长期记忆内核（`ADR-0010`）——五类记忆（event/schedule/preference/fact/summary）、
+  事件日期与写入时间分离、时间窗兜底检索、偏好与事实常驻注入、半衰期遗忘
+  （日程 7 / 事件 30 / 事实 90 / 摘要 45 / 偏好 180 天）+ 审计日志
+- **`tests/test_memory.py`**：40 项单测（不接 LLM，用固定数据验证"存得对、找得回、忘得掉"）
 - **`docs/impl/API.md`**：HTTP 接口契约手册——15 个 `/api/*` 端点的请求/响应字段、状态码矩阵、数据模型、`IF-01~10` 到 HTTP 的映射，成为接口的**唯一权威**
 - 正常开发文档：`docs/impl/DEVELOPING.md`、`docs/impl/SECURITY.md`、`docs/impl/DECISIONS.md`、`docs/impl/GLOSSARY.md`
 - README 文档阅读顺序与 Agent 开工规则
 
 ### Changed
 
-- `paths.py` 新增 `KB_INDEX_DIR`（`data/kb`）；索引随 `data/` 一起被 gitignore，语料原文不入库
+- `paths.py` 新增 `KB_INDEX_DIR`（`data/kb`）与 `MEMORY_DIR`（`data/memory`）；随 `data/` 一起 gitignore，语料与记忆原文不入库
 - `ARCHITECTURE.md` 增加 §3.7 知识库数据流与线程说明；`STATUS.md` 更新 WP3、实测数字与缺口
 - `AGENTS.md` §5 与 `DEVELOPING.md` §3 的验证命令加入 `python -m unittest discover -s tests`
 - `ARCHITECTURE.md` §4 删除重复的接口表（已过期：缺 `/api/ocr`、`/api/avatar`，并写了不存在的 `timings` 字段），改为指向 `API.md` 并只保留跨接口约定

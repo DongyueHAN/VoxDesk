@@ -24,13 +24,14 @@ DATA_DIR = ROOT / "data"
 CHATS_DIR = DATA_DIR / "chats"
 ARCHIVE_DIR = DATA_DIR / "archive"
 KB_INDEX_DIR = DATA_DIR / "kb"
+MEMORY_DIR = DATA_DIR / "memory"
 OUT_DIR = ROOT / "out"
 
 ENV_FILES = [ROOT / ".env", Path(r"D:\VoxDesk\demo\.env")]
 
 
 def ensure_dirs() -> None:
-    for path in (DATA_DIR, CHATS_DIR, ARCHIVE_DIR, KB_INDEX_DIR, OUT_DIR):
+    for path in (DATA_DIR, CHATS_DIR, ARCHIVE_DIR, KB_INDEX_DIR, MEMORY_DIR, OUT_DIR):
         path.mkdir(parents=True, exist_ok=True)
 
 

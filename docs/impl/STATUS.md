@@ -36,6 +36,7 @@
 | 14 | 声纹可视化 | `/voice` | w0.3/w0.4 功能保留；`/api/chat` 继续返回 `timbre` |
 | 15 | 模型本地化 | 停外部源码 | `audio/`、`tts/` 源码 + 模型都在本仓库 |
 | 16 | 知识库索引与检索 | `python kb.py --build` / `--search "词"` | 本仓 `docs/` 43 篇 → 682 片段；命中带 `path:起-止行` |
+| 17 | 长期记忆（内核） | `python memory.py --add / --search / --decay` | 事件/日程/偏好三类写入；"昨天早饭"命中 11-18；"明天有什么安排"时间兜底命中；技术内容被域过滤拒收 |
 
 ## 2. 不能跑 / 只做了一半
 
@@ -54,6 +55,9 @@
 | 知识库接入对话 | 只有内核与 CLI；模型还不会调用它 | P2：`/api/kb/*`；P3：`kb_search` 工具 |
 | 向量检索 | 只有 BM25 全文 | 规范区 `ADR-0009` 定的第二版（先全文、后混合） |
 | 知识库召回率 | 双字切分，未按查询集评测 | `REQ-F-087` 的 `Recall@5 ≥ 80%` **未验收** |
+| 记忆抽取 | 只有内核；记忆靠手工/测试写入 | P3：LLM 结构化抽取 + 域标签交叉校验 |
+| 记忆注入 | `format_for_prompt()` 可用，但 `voice_app.chat` 尚未调用 | P3：注入 system prompt |
+| 记忆的接口与界面 | 无 `/api/memory/*`，无前端 | 未排期 |
 
 ## 3. 文件与规模
 
@@ -64,8 +68,10 @@
 | `llm.py` | 256 | DeepSeek Chat + 工具循环 |
 | `search.py` | 174 | Search/Fetch API + 缓存 + 防缓存抓取 |
 | `store.py` | 273 | 会话 JSON、1MB/30/100、归档清理 |
-| `kb.py` | 395 | 知识库索引/检索内核（`IF-07`）：增量建索引 + BM25 |
-| `tests/test_kb.py` | 198 | `kb.py` 单测（27 项，stdlib unittest） |
+| `kb.py` | 476 | 知识库索引/检索内核（`IF-07`）：增量建索引 + BM25 |
+| `memory.py` | 664 | 长期记忆：写入/检索/遗忘（`ADR-0010`） |
+| `tests/test_kb.py` | 246 | `kb.py` 单测（27 项，stdlib unittest） |
+| `tests/test_memory.py` | 308 | `memory.py` 单测（40 项，不接 LLM） |
 | `prompts.py` | 95 | DSH 风格提示词 + 工具 schema |
 | `static/app.html` | 105 | 对话应用骨架 |
 | `static/app.css` | 309 | 通用/陪伴样式 |
@@ -103,6 +109,7 @@
 | 知识库 1 万篇全量建索引 | 冷缓存 111s / 热缓存 6.5s（验收线 5min，**通过**） |
 | 知识库 1 万篇单篇增量 | 0.9–2.4s（验收线 5s，**通过**） |
 | 知识库检索 1 万篇 | 87ms 冷 / 72ms 热（预分词缓存后） |
+| 单测总量 | 67 项 / 0.9s（`unittest discover -s tests`：知识库 27 + 长期记忆 40） |
 
 ## 6. 与原框架的差距
 
